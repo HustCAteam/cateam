@@ -1,0 +1,53 @@
+name: cateam
+
+services:
+  gateway:
+    image: caddy:2.10.2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "404:443"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./caddy:/etc/caddy:ro
+      - /root/mainpage/cateam/public:/srv/mainpage:ro
+      - /root/touranki/web:/srv/touranki:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      touranki-server:
+        condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  touranki-server:
+    image: cateam/touranki-server:local
+    build:
+      context: .
+      dockerfile: touranki.Dockerfile
+    restart: unless-stopped
+    read_only: true
+    environment:
+      TOURANKI_ADDR: ":8080"
+      TOURANKI_ALLOWED_ORIGINS: "https://touranki.1037.games"
+      TOURANKI_LOG_LEVEL: "info"
+      TOURANKI_LOG_FORMAT: "json"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/healthz"]
+      interval: 15s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  caddy_data:
+  caddy_config:

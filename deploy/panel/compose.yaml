@@ -1,0 +1,31 @@
+name: cateam-panel
+
+services:
+  portainer:
+    image: portainer/portainer-ce:2.45.2
+    restart: unless-stopped
+    command:
+      - --host
+      - unix:///var/run/docker.sock
+      - --admin-password-file
+      - /run/secrets/admin_password
+      - --http-disabled
+    ports:
+      - "0.0.0.0:9443:9443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    secrets:
+      - admin_password
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  portainer_data:
+
+secrets:
+  admin_password:
+    file: ./secrets/portainer-admin-password

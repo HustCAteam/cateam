@@ -1,0 +1,5 @@
+/build/
+*.tar
+/mainpage/.hugo_build.lock
+/mainpage/resources/
+/panel/secrets/

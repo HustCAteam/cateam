@@ -1,0 +1,5 @@
+**
+!build/
+!build/touranki/
+!build/touranki/touranki-server
+!touranki.Dockerfile

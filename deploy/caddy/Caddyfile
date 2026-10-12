@@ -1,0 +1,22 @@
+hustca.cn {
+	encode zstd gzip
+	root * /srv/mainpage
+	file_server
+}
+
+touranki.1037.games {
+	encode zstd gzip
+
+	@api path /api/* /healthz
+	handle @api {
+		reverse_proxy touranki-server:8080
+	}
+
+	handle {
+		root * /srv/touranki
+		@fresh path / /index.html /sw.js /app.webmanifest
+		header @fresh Cache-Control "no-cache"
+		try_files {path} /index.html
+		file_server
+	}
+}
