@@ -4,3 +4,4 @@ title: HustCA Mainpage
 module:
   imports:
     - path: github.com/imfing/hextra
+    - path: github.com/Gentoo-zh/gentoozh-theme
