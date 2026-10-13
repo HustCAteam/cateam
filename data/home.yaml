@@ -1,0 +1,78 @@
+tagline: 不限专业 · 不限起点 · 欢迎一起动手
+entries:
+  - icon: code
+    title: 项目展台
+    sub: 从想法到上线，看看正在发生的实践
+    link: /projects/
+  - icon: book-open
+    title: 共学手册
+    sub: 从 Git、提问与协作开始，慢慢积累
+    link: /docs/
+  - icon: newspaper
+    title: 文章与活动
+    sub: 技术笔记、项目进展和交流记录
+    link: /posts/
+  - icon: information-circle
+    title: 认识计协
+    sub: 技术、硬件、设计与运营，都有位置
+    link: /about/
+community:
+  - icon: chat-alt-2
+    name: CATeam 计协交流群
+    sub: QQ · 1071797934
+    link: /join/#community
+  - icon: code
+    name: 学码编程交流群
+    sub: QQ · 695523861
+    link: /join/#coding
+  - icon: github
+    name: GitHub
+    sub: HustCAteam · 一起写点东西
+    link: https://github.com/HustCAteam
+  - icon: user-group
+    name: 网站一起做
+    sub: 文案、图片、代码，欢迎来贡献
+    link: /contributing/
+features:
+  - title: 对技术感兴趣，就来一起玩
+    label: 计协招新 · 宣传素材
+    description: 不论你是刚接触编程，还是想找人一起做项目，从一次交流开始。
+    image: /media/poster-community-cover.webp
+    width: 1024
+    height: 600
+    alt: 计协宣传海报中的电脑与校园插画
+    link: /join/
+  - title: 幻想郷闘乱記 · Touranki
+    label: 真实项目 · 已部署
+    description: 来服务器上的东方桌游坐一席，也可以从这里走近一个真实的 Web 工程。
+    image: /media/touranki-cover.webp
+    alt: Touranki 项目使用的游戏场景画面
+    width: 1024
+    height: 600
+    link: /projects/
+  - title: 从认识电脑，到帮助身边的人
+    label: 义务维修 · 历史资料
+    description: 这张旧资料里的手绘招牌，记录着计协的硬件实践。当前服务安排以群内确认为准。
+    image: /media/repair-history.webp
+    alt: 2021 年协会资料中的手绘电脑义务维修招牌
+    contain: true
+    width: 438
+    height: 503
+    link: /about/
+roles:
+  - icon: code
+    title: 软件开发
+    description: 写代码，也把它交到真实用户手里。
+    link: /contributors/software/
+  - icon: chip
+    title: 硬件实践
+    description: 从认识设备到动手维护，一起摸清原理。
+    link: /contributors/hardware/
+  - icon: photograph
+    title: 内容与设计
+    description: 用文字、图像和界面把好点子讲清楚。
+    link: /contributors/design/
+  - icon: user-group
+    title: 活动运营
+    description: 把一次相遇，组织成可以持续的交流。
+    link: /contributors/operations/

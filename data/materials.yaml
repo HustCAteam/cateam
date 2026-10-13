@@ -1,0 +1,155 @@
+# 素材台账：记录来源与公开边界，不代表授予第三方素材再分发许可。
+reviewed_on: "2026-10-13"
+policy:
+  - 原始文件保持不动；网站仅发布以下经过筛选的派生图片。
+  - 不发布私人聊天、手机号、私人表单、人脸合照、设备序列号或旧群二维码。
+  - 宣传插画不是活动实拍；历史材料不是当前活动、维修服务或招新岗位承诺。
+  - 图片均重新编码，不携带原始 EXIF、设备定位或聊天界面。
+  - 二维码保留原件像素，不重新生成；PNG 无损是指对 JPEG 解码像素无新增有损压缩。
+  - 二维码解码一致性不等于验证 QQ 加群链接长期有效，使用时以 QQ 客户端为准。
+assets:
+  - id: ca-logo
+    source: "~/Downloads/CA_logo/CA_原版.png"
+    source_size: [904, 904]
+    meaning: CA 原版蓝绿渐变标志
+    processing: 等比例缩小至 512×512，保留原有透明通道、轮廓和配色；WebP 使用无损编码。
+    restrictions: 不从宣传海报重画 Logo，不将透明部分填为黑色。
+    outputs:
+      - {path: /media/ca-logo.png, width: 512, height: 512, bytes: 16443}
+      - {path: /media/ca-logo.webp, width: 512, height: 512, bytes: 10860}
+      - {path: /favicon-16x16.png, width: 16, height: 16, bytes: 699}
+      - {path: /favicon-32x32.png, width: 32, height: 32, bytes: 1418}
+      - {path: /favicon-48x48.png, width: 48, height: 48, bytes: 1871}
+      - {path: /favicon-192x192.png, width: 192, height: 192, bytes: 6819}
+      - {path: /favicon-512x512.png, width: 512, height: 512, bytes: 16443}
+      - path: /favicon.ico
+        sizes: [16, 32, 48, 64, 128, 256]
+        bytes: 22901
+      - path: /apple-touch-icon.png
+        width: 180
+        height: 180
+        bytes: 5547
+        processing: 156×156 原版 Logo 居中放置于 180×180 白底，适配 Apple touch icon。
+  - id: poster-recruit
+    source: "~/Pictures/QQ/海报1_计协招新_二维码已更换.png"
+    source_size: [1024, 1536]
+    meaning: 用户指定的最终版计协招新宣传海报
+    processing: 保持完整画面及原始尺寸，WebP quality 92 / method 6。
+    restrictions: 属宣传插画，不作为某次真实活动或当前排期的证据。
+    outputs:
+      - {path: /media/poster-recruit.webp, width: 1024, height: 1536, bytes: 260158}
+    qr_check:
+      decoder: zbarimg
+      result: 原图与 WebP 均直接解出两条相同链接，与两份最新二维码原件一致。
+      targets: ["https://qm.qq.com/q/87AAtvpbGM", "https://qm.qq.com/q/8Ra61Zy3W8"]
+  - id: poster-community
+    source: "~/Pictures/QQ/海报2_计算机协会_二维码已更换.png"
+    source_size: [1024, 1536]
+    meaning: 用户指定的最终版计算机协会宣传海报
+    processing: 保持完整画面及原始尺寸，WebP quality 92 / method 6。
+    restrictions: 属宣传插画，不是校园或活动实拍。画面内小二维码应优先通过加入页的独立 PNG 扫描。
+    outputs:
+      - {path: /media/poster-community.webp, width: 1024, height: 1536, bytes: 219158}
+      - path: /media/poster-community-cover.webp
+        width: 1024
+        height: 600
+        bytes: 87188
+        processing: 原图裁框 [0, 700, 1024, 1300]；不放大、不拼接；WebP quality 88 / method 6。
+        meaning: 宣传海报中的笔记本与校园插画局部，用于首页视觉入口。
+    qr_check:
+      decoder: zbarimg
+      result: 原图整图直接扫描未解出；对两块二维码区域裁切并放大、灰度阈值辅助识别，原图与 WebP 均解出相同的两条链接。
+      original_crop_boxes: [[42, 1340, 154, 1454], [180, 1340, 294, 1454]]
+      decoding_only_processing: 放大 5 倍，尝试最近邻或双三次采样及灰度阈值 180、200、220；这些诊断变体不发布。
+      targets: ["https://qm.qq.com/q/87AAtvpbGM", "https://qm.qq.com/q/8Ra61Zy3W8"]
+  - id: qr-community
+    source: "~/Pictures/QQ/qrcode_1791855157095.jpg"
+    source_size: [1284, 2286]
+    meaning: CATeam 计协大水群
+    public_group_number: "1071797934"
+    processing: 仅截取原图二维码 [205, 750, 1079, 1624]，四边各补 128px 纯白安全区，不缩放、不二值化、不重新生成。
+    restrictions: 不发布原件中的界面、头像及其他多余内容。
+    outputs:
+      - {path: /media/qr-community.png, width: 1130, height: 1130, bytes: 254330}
+    qr_check:
+      decoder: zbarimg
+      original_target: "https://qm.qq.com/q/87AAtvpbGM"
+      output_target: "https://qm.qq.com/q/87AAtvpbGM"
+      identical: true
+      group_number_check: 逐图查看原件群号与最终版海报群号，均为 1071797934；未联网验证加群状态。
+  - id: qr-coding
+    source: "~/Pictures/QQ/qrcode_1791855171825.jpg"
+    source_size: [1284, 2286]
+    meaning: 学码编程交流群
+    public_group_number: "695523861"
+    processing: 仅截取原图二维码 [205, 750, 1079, 1624]，四边各补 128px 纯白安全区，不缩放、不二值化、不重新生成。
+    restrictions: 不发布原件中的界面、头像及其他多余内容。
+    outputs:
+      - {path: /media/qr-coding.png, width: 1130, height: 1130, bytes: 247572}
+    qr_check:
+      decoder: zbarimg
+      original_target: "https://qm.qq.com/q/8Ra61Zy3W8"
+      output_target: "https://qm.qq.com/q/8Ra61Zy3W8"
+      identical: true
+      group_number_check: 逐图查看原件群号与最终版海报群号，均为 695523861；未联网验证加群状态。
+  - id: repair-history
+    source: "~/Downloads/计算机协会全体成员大会.pptx"
+    source_date: "2021-10-29"
+    source_member: ppt/media/image5.png
+    source_slide: 6
+    slide_title: 义务维修
+    source_size: [640, 852]
+    meaning: 历史资料中的计协与啄木鸟义务维修手绘招牌局部
+    processing: 裁框 [55, 192, 493, 695]，去除画外手、边缘旧二维码与背景，只保留招牌主体；WebP quality 90 / method 6。
+    restrictions:
+      - 必须标注历史资料，不承诺当前维修范围、合作方、时间或服务可用性。
+      - 不是 workshop 现场全景，不标为近期活动照片。
+      - 不发布 PPT 原件、商用模板、完整照片或其余含私人信息的页面。
+    outputs:
+      - {path: /media/repair-history.webp, width: 438, height: 503, bytes: 46910}
+  - id: touranki-cover
+    source: "~/Projects/touhou-hitman-go/touranki-web/public/materials/table-background.webp"
+    source_size: [1280, 720]
+    corroborating_reference: "~/Projects/touhou-hitman-go/touranki-web/src/styles.css 的 body 背景引用 /materials/table-background.webp"
+    project_url: "https://touranki.1037.games:404/"
+    meaning: Touranki 项目已有场景背景图，用于该项目的入口配图
+    processing: 居中裁切并等比例缩小为 1024×600，WebP quality 88 / method 6；未拼接或新增艺术素材。
+    restrictions:
+      - 是项目既有美术背景，不是游戏功能截图、实拍或计协原创美术的证明。
+      - 不据此宣称对东方题材或第三方美术拥有权利；不得将其泛化为协会通用品牌图。
+    outputs:
+      - {path: /media/touranki-cover.webp, width: 1024, height: 600, bytes: 99200}
+not_published:
+  - sources: ["~/Pictures/CAhotpot.png", "~/Pictures/CAhotpoto.png"]
+    assessment: 两张 2796×2098 同场景合照；后者局部叠加角色图，但仍保留多张可辨认人脸。
+    reason: 无公开肖像授权信息；不发布、不尝试以局部遮挡代替授权，也不将其人员身份写入网站。
+  - source: "~/Downloads/计算机协会全体成员大会.pptx:ppt/media/image6.png"
+    assessment: 第 6 页义务维修摊位照片，852×640，横幅明确协会活动背景。
+    reason: 包含可辨认参与者、现场屏幕与旧二维码；未发布整张。仅采用同页无脸招牌裁图。
+  - source: "~/Downloads/计算机协会全体成员大会.pptx:ppt/media/image23.jpeg"
+    assessment: 第 38 页散热器知识配图，3298×2474，展示打开底盖的笔记本。
+    reason: 图内多处设备条码、二维码及序列标签；不发布，且其讲义语境不足以证明是协会某次维修实拍。
+  - source: "~/Downloads/计算机协会全体成员大会.pptx:ppt/media/image13.png 至 image22.png、image24.png"
+    assessment: 处理器、内存、显卡、散热器、机箱等产品图或厂商示意图。
+    reason: 不是可确认为协会原创的活动素材；不另行转载厂商商品图，不以产品图冒充协会项目。
+  - source: "~/Downloads/计算机协会全体成员大会.pptx:其他嵌入图片与模板"
+    assessment: 另含旧 QR、网页截图、团队介绍、题字以及商用模板元素；已逐项缩略预览。
+    reason: 当前联系信息以两份最新 QR 原件为准；不公开旧群码、个人资料或授权不明的模板与截图。
+  - sources: ["~/Downloads/IMG_20210905_174809.jpg", "~/Downloads/1630743296269.jpg", "~/Downloads/IMG_20210615_153141.jpg", "~/Downloads/QQ图片20211012132623.png"]
+    assessment: 三张书籍照片及一张售书备忘录截图，已目视查看；不是可可靠证明协会活动归属的实拍。
+    reason: 缺少计协活动归属证据，售书备忘录属于私人上下文；不发布，不虚构协会藏书或借阅服务。
+  - sources: ["~/Downloads/HUST CA社团介绍.pdf", "~/Downloads/HUST CAteam招新.pdf", "~/Downloads/关于计协的活动.pdf"]
+    assessment: pdfimages -list 未列出嵌入位图；保留为内容事实参考而非可提取的活动照片来源。
+    reason: 不提供旧文档整件下载；历史时间与方向由内容编辑另行标明，不冒充当前通知。
+  - source: "~/Downloads/计算机协会海报.pdf"
+    assessment: 嵌入图仅有装饰箭头与旧群二维码；已目视查看。
+    reason: 不是活动照片；旧二维码已被用户最新两张宣传海报与正确 QR 原件替代，不再使用。
+  - source: "~/Downloads/CA_logo/"
+    assessment: 已检查原版、调色版及可用矢量来源；网站采用 CA_原版.png 保留真实渐变与透明度。
+    reason: 其他颜色、立体效果与背景版本未混用，不将 AI 源文件或整包发布。
+  - source: "~/Projects/touhou-hitman-go/touranki-web/public/icons/icon-512.webp"
+    assessment: 已查看真实项目图标。
+    reason: 首页采用同项目既有横向背景作配图，不额外复制未使用图标。
+  - sources: [年审材料, 私人表单, 凭据文件, 聊天数据库, 无关个人图片与项目]
+    assessment: 不打开、不提取内容。
+    reason: 不在公开素材范围内；不将个人资料或个人项目冒称协会成果。

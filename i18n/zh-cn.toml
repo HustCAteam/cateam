@@ -1,0 +1,11 @@
+[contrib_back]
+other = "返回共建方向"
+
+[contrib_overlay_contributors]
+other = "一起参与的方向"
+
+[bento_contributors]
+other = "共建方向"
+
+[bento_see_all]
+other = "查看全部方向"

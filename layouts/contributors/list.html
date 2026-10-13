@@ -1,0 +1,27 @@
+{{- /* Gentoo contributor cards, adapted for participation areas rather than
+      fabricated people or commit totals. Keep its original grid/profile CSS. */ -}}
+{{ define "main" }}
+<div class="hx:mx-auto hx:flex hextra-max-page-width">
+  {{ partial "sidebar.html" (dict "context" . "disableSidebar" true "displayPlaceholder" false) }}
+  <article class="hx:w-full hx:break-words hx:flex hx:min-w-0 hx:justify-center hx:pb-8">
+    <main id="content" class="hx:w-full hx:min-w-0 hextra-max-content-width hx:px-6 hx:pt-4 hx:md:px-12">
+      <h1 class="hx:mt-2 hx:text-4xl hx:font-bold hx:tracking-tight">{{ .Title }}</h1>
+      <div class="content">{{ .Content }}</div>
+      <div class="contributor-grid">
+        {{- range .Pages.ByTitle }}
+        <a href="{{ .RelPermalink }}" class="contributor-card">
+          {{- with .Resources.GetMatch "feature*" }}
+          {{- $avatar := .Resize "160x webp q80" }}
+          <img src="{{ $avatar.RelPermalink }}" alt="" width="80" height="80" loading="lazy" />
+          {{- else }}
+          <div class="contributor-card-placeholder">{{ substr .Title 0 1 }}</div>
+          {{- end }}
+          <div class="contributor-name">{{ .Title }}</div>
+          <div class="contributor-handle">欢迎参与</div>
+        </a>
+        {{- end }}
+      </div>
+    </main>
+  </article>
+</div>
+{{ end }}

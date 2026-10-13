@@ -1,0 +1,20 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>华中科技大学计算机协会 – 项目实践</title><link>https://hustca.cn/tags/%E9%A1%B9%E7%9B%AE%E5%AE%9E%E8%B7%B5/</link><description>Recent content in 项目实践 on 华中科技大学计算机协会</description><generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Tue, 13 Oct 2026 00:00:00 +0000</lastBuildDate><atom:link href="https://hustca.cn/tags/%E9%A1%B9%E7%9B%AE%E5%AE%9E%E8%B7%B5/feed.xml" rel="self" type="application/rss+xml"/><item><title>Touranki：先体验，再一起研究</title><link>https://hustca.cn/posts/touranki/</link><pubDate>Tue, 13 Oct 2026 00:00:00 +0000</pubDate><guid>https://hustca.cn/posts/touranki/</guid><description>
+&lt;p&gt;&lt;strong&gt;Touranki 已上线，可以通过浏览器访问。&lt;/strong&gt; 想知道项目是什么样，不妨先打开它，而不是先给自己安排一长串学习任务。&lt;/p&gt;
+&lt;div class="hextra-cards hx:mt-4 hx:gap-4 hx:grid not-prose" style="--hextra-cards-grid-cols: 1;"&gt;
+&lt;a class="hextra-card hx:group hx:flex hx:flex-col hx:justify-start hx:overflow-hidden hx:rounded-lg hx:border hx:border-gray-200 hx:text-current hx:no-underline hx:dark:shadow-none hx:hover:shadow-gray-100 hx:dark:hover:shadow-none hx:shadow-gray-100 hx:active:shadow-sm hx:active:shadow-gray-200 hx:transition-all hx:duration-200 hx:hover:border-gray-300 hx:bg-transparent hx:shadow-xs hx:dark:border-neutral-800 hx:hover:bg-slate-50 hx:hover:shadow-md hx:dark:hover:border-neutral-700 hx:dark:hover:bg-neutral-900" href="https://touranki.1037.games:404/" target="_blank" rel="noreferrer"&gt;&lt;div class="hx:mt-auto"&gt;
+&lt;span class="hextra-card-icon hx:flex hx:font-semibold hx:items-start hx:gap-2 hx:pt-4 hx:px-4 hx:text-gray-700 hx:hover:text-gray-900 hx:dark:text-neutral-200 hx:dark:hover:text-neutral-50"&gt;前往 Touranki&lt;/span&gt;&lt;div class="hextra-card-subtitle hx:line-clamp-3 hx:text-sm hx:font-normal hx:text-gray-500 hx:dark:text-gray-400 hx:px-4 hx:mb-4 hx:mt-2"&gt;在游戏站点查看当前玩法与功能。&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-badge hextra-card-tag"&gt;
+&lt;div class="hx:inline-flex hx:gap-1 hx:items-center hx:rounded-full hx:px-2.5 hx:leading-6 hx:text-[.65rem] hx:border hx:text-gray-600 hx:bg-gray-100 hx:dark:bg-neutral-800 hx:dark:text-neutral-200 hx:border-gray-200 hx:dark:border-neutral-700"&gt;已上线&lt;/div&gt;
+&lt;/div&gt;&lt;/a&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="玩过之后能做什么"&gt;玩过之后，能做什么&lt;span class="hx:absolute hx:-mt-20" id="玩过之后能做什么"&gt;&lt;/span&gt;
+&lt;a href="#%e7%8e%a9%e8%bf%87%e4%b9%8b%e5%90%8e%e8%83%bd%e5%81%9a%e4%bb%80%e4%b9%88" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;如果遇到问题，先记下从进入页面到出现现象之间的操作。说明浏览器、设备、预期结果与实际结果；有截图会更直观，但记得移除账号等私人信息。&lt;/p&gt;
+&lt;p&gt;如果某个地方让你困惑，也可以描述“我当时以为会发生什么”。清楚的体验反馈本身就有价值，不必把每条反馈都写成技术诊断。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="想继续看源码"&gt;想继续看源码&lt;span class="hx:absolute hx:-mt-20" id="想继续看源码"&gt;&lt;/span&gt;
+&lt;a href="#%e6%83%b3%e7%bb%a7%e7%bb%ad%e7%9c%8b%e6%ba%90%e7%a0%81" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;协会提供了三个仓库入口：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://github.com/HustCAteam/touranki-web" target="_blank" rel="noopener"&gt;touranki-web&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://github.com/HustCAteam/touranki-server" target="_blank" rel="noopener"&gt;touranki-server&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://github.com/HustCAteam/touranki-core" target="_blank" rel="noopener"&gt;touranki-core&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;访问源码需要相应的仓库权限；如果看到 404，可到&lt;a href="https://hustca.cn/join/"&gt;交流群&lt;/a&gt;确认访问方式。开始开发前，先阅读仓库中的运行与协作说明。&lt;/p&gt;
+&lt;p&gt;不知道从哪里开始协作时，可以先读&lt;a href="https://hustca.cn/docs/git/"&gt;Git 入门&lt;/a&gt;和&lt;a href="https://hustca.cn/docs/asking/"&gt;提问说明&lt;/a&gt;，再选一个范围清楚的小问题。更多入口集中在&lt;a href="https://hustca.cn/projects/"&gt;项目展台&lt;/a&gt;。&lt;/p&gt;</description></item></channel></rss>

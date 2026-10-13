@@ -1,0 +1,48 @@
+{{- /* Site-specific SEO and media through Hextra's custom/head-end hook.
+      RSS, reading measure and copy behavior adapted from gentoozh-theme (MIT). */ -}}
+{{- with .OutputFormats.Get "rss" }}
+<link rel="alternate" type="application/rss+xml" href="{{ .Permalink }}" title="{{ $.Site.Title }}" />
+{{- end }}
+<meta property="og:site_name" content="{{ .Site.Title }}" />
+<meta property="og:locale" content="zh_CN" />
+{{- if .IsHome }}
+<script type="application/ld+json">{{ dict "@context" "https://schema.org" "@type" "WebSite" "name" .Site.Title "url" .Site.Home.Permalink "inLanguage" "zh-CN" "description" .Site.Params.description | jsonify | safeJS }}</script>
+<script type="application/ld+json">{{ dict "@context" "https://schema.org" "@type" "Organization" "name" .Site.Title "url" .Site.Home.Permalink "logo" (absURL "media/ca-logo.png") "sameAs" .Site.Params.sameAs | jsonify | safeJS }}</script>
+{{- end }}
+{{- with resources.Get "css/site.css" | minify | fingerprint }}
+<link rel="stylesheet" href="{{ .RelPermalink }}" integrity="{{ .Data.Integrity }}" />
+{{- end }}
+{{- if and (eq .Kind "page") (eq .Type "blog") }}
+<style>:root{--hextra-max-content-width:46rem}</style>
+{{- end }}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var chips = document.querySelectorAll('.copy-chip[data-copy]');
+  if (!chips.length) return;
+  var toast = document.createElement('div');
+  toast.id = 'copy-toast';
+  toast.setAttribute('role', 'status');
+  document.body.appendChild(toast);
+  var timer;
+  function flash(message) {
+    toast.textContent = message;
+    toast.classList.add('show');
+    clearTimeout(timer);
+    timer = setTimeout(function () { toast.classList.remove('show'); }, 1800);
+  }
+  async function copy(el) {
+    try {
+      await navigator.clipboard.writeText(el.getAttribute('data-copy'));
+      flash('已复制');
+    } catch (_) {
+      flash('未能复制，请长按或选中文字复制');
+    }
+  }
+  chips.forEach(function (el) {
+    el.addEventListener('click', function () { copy(el); });
+    el.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); copy(el); }
+    });
+  });
+});
+</script>

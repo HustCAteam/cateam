@@ -1,0 +1,14 @@
+{{ define "main" }}
+<main id="content" class="not-prose">
+  <section class="error-404">
+    <img src="{{ "media/ca-logo.webp" | relURL }}" alt="" class="error-404-mascot" width="96" height="96" />
+    <p class="error-404-code">404</p>
+    <h1 class="error-404-title">这条路暂时还没写好</h1>
+    <p class="error-404-desc">页面可能已移动，或链接有误。回到首页看看，也欢迎一起补上缺失的内容。</p>
+    <div class="error-404-actions">
+      <a class="bento-cta" href="{{ .Site.Home.RelPermalink }}">回到计协首页</a>
+      <a class="bento-cta-2" href="{{ "posts/" | relLangURL }}">读读文章</a>
+    </div>
+  </section>
+</main>
+{{ end }}

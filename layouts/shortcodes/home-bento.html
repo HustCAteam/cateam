@@ -1,0 +1,94 @@
+{{- /* Adapted from gentoozh-theme v0.3.23 (MIT): retain its Bento classes;
+      site-specific links and labels live in data/home.yaml, not theme CSS. */ -}}
+{{- $home := .Site.Data.home -}}
+<div class="bento not-prose">
+  <section class="bento-tile bento-hero">
+    <a class="bento-badge" href="{{ .Get "badgeLink" | relLangURL }}">{{ .Get "badge" }}</a>
+    <h1 class="bento-title">{{ .Get "title" }}</h1>
+    <p class="bento-subtitle">{{ .Get "subtitle" | safeHTML }}</p>
+    <div class="bento-cta-row">
+      <a class="bento-cta" href="{{ .Get "ctaLink" | relLangURL }}">{{ .Get "cta" }}</a>
+      <a class="bento-cta-2" href="{{ .Get "cta2Link" | relLangURL }}">{{ .Get "cta2" }}</a>
+    </div>
+    <p class="bento-since">{{ $home.tagline }}</p>
+  </section>
+
+  {{- range $home.entries }}
+  <a class="bento-tile bento-entry" href="{{ .link | relLangURL }}">
+    <span class="bento-entry-icon">{{ partial "utils/icon.html" (dict "name" .icon "attributes" "height=1.5rem") }}</span>
+    <span class="bento-entry-title">{{ .title }}</span>
+    <span class="bento-entry-sub">{{ .sub }}</span>
+  </a>
+  {{- end }}
+
+  <section class="bento-tile bento-full" aria-labelledby="bento-community">
+    <div class="bento-head">
+      <h2 id="bento-community" class="bento-head-title">找到同好，从这里开始</h2>
+      <a class="bento-head-more" href="{{ "join/" | relLangURL }}">加入与交流 <span class="bento-head-more-arrow">→</span></a>
+    </div>
+    <div class="bento-links">
+      {{- range $home.community }}
+      <a class="bento-link" href="{{ .link | relLangURL }}"{{ if hasPrefix .link "https://" }} target="_blank" rel="noopener noreferrer"{{ end }}>
+        <span class="bento-link-icon">{{ partial "utils/icon.html" (dict "name" .icon "attributes" "height=1.35rem") }}</span>
+        <span class="bento-link-text"><span class="bento-link-name">{{ .name }}</span><span class="bento-link-sub">{{ .sub }}</span></span>
+      </a>
+      {{- end }}
+    </div>
+  </section>
+
+  <section class="bento-tile bento-full" aria-labelledby="bento-practice">
+    <div class="bento-head">
+      <h2 id="bento-practice" class="bento-head-title">让想法，走出编辑器</h2>
+      <a class="bento-head-more" href="{{ "projects/" | relLangURL }}">探索项目 <span class="bento-head-more-arrow">→</span></a>
+    </div>
+    <div class="bento-articles">
+      {{- range $home.features }}
+      <a class="bento-article ca-feature" href="{{ .link | relLangURL }}">
+        <img class="ca-feature-image{{ if .contain }} ca-feature-image--contain{{ end }}" src="{{ .image | relURL }}" alt="{{ .alt }}" width="{{ .width }}" height="{{ .height }}" loading="lazy" decoding="async" />
+        <span class="bento-article-meta"><span class="bento-article-tag">{{ .label }}</span></span>
+        <span class="bento-article-title">{{ .title }}</span>
+        <span class="bento-article-excerpt">{{ .description }}</span>
+      </a>
+      {{- end }}
+    </div>
+  </section>
+
+  {{- $posts := first 3 ((where .Site.RegularPages "Section" "posts").ByDate.Reverse) -}}
+  {{- with $posts }}
+  <section class="bento-tile bento-full" aria-labelledby="bento-articles-h">
+    <div class="bento-head">
+      <h2 id="bento-articles-h" class="bento-head-title">最近在聊什么</h2>
+      <span class="bento-head-actions">
+        <a class="bento-head-rss" href="{{ "feed.xml" | relLangURL }}" title="订阅文章 RSS" aria-label="订阅文章 RSS">{{ partial "utils/icon.html" (dict "name" "rss" "attributes" "height=1rem") }}</a>
+        <a class="bento-head-more" href="{{ "posts/" | relLangURL }}">全部文章 <span class="bento-head-more-arrow">→</span></a>
+      </span>
+    </div>
+    <div class="bento-articles">
+      {{- range . }}
+      <a class="bento-article" href="{{ .RelPermalink }}">
+        <span class="bento-article-meta">{{ with .Params.tags }}<span class="bento-article-tag">{{ index . 0 }}</span>{{ end }}<time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "2006-01-02" }}</time></span>
+        <span class="bento-article-title">{{ .Title }}</span>
+        <span class="bento-article-excerpt">{{ .Description }}</span>
+      </a>
+      {{- end }}
+    </div>
+  </section>
+  {{- end }}
+
+  <section class="bento-tile bento-full" aria-labelledby="bento-contribs">
+    <div class="bento-head">
+      <h2 id="bento-contribs" class="bento-head-title">总有一种方式，可以一起创造</h2>
+      <a class="bento-head-more" href="{{ "contributors/" | relLangURL }}">认识共建方向 <span class="bento-head-more-arrow">→</span></a>
+    </div>
+    <div class="bento-articles">
+      {{- range $home.roles }}
+      <a class="bento-article" href="{{ .link | relLangURL }}">
+        <span class="bento-entry-icon">{{ partial "utils/icon.html" (dict "name" .icon "attributes" "height=1.5rem") }}</span>
+        <span class="bento-article-title">{{ .title }}</span>
+        <span class="bento-article-excerpt">{{ .description }}</span>
+      </a>
+      {{- end }}
+    </div>
+    <p class="bento-since ca-direction-note">这里展示参与方向，不是成员名单。成员档案与具体活动安排仍在整理，页面中的占位内容均有单独标注。</p>
+  </section>
+</div>
