@@ -11,7 +11,7 @@
 - 已有首页、协会介绍、加入与交流、Touranki 项目展台、文章与活动、共学手册、四个共建方向及网站共建指南；文章标签、RSS、手机导航、群号复制和 404 页面均有对应入口。
 - 使用本机提供的原版 CA Logo、两张最新招新海报及对应二维码、历史义务维修招牌裁图，以及 Touranki 项目既有背景。来源、裁剪方法和公开范围记录在 `data/materials.yaml`；未发布人脸合照、旧二维码、私人表单或原始 PPT。
 - 协会介绍与参与方向依据已有公开资料整理。`content/posts/activity-example/` 是明确标注的活动文案示例；`content/contributors/` 展示软件、硬件、内容设计和活动运营方向，成员档案待补充，不虚构人物或提交次数。
-- 首页中的入口来自 `data/home.yaml`，最新文章从 `content/posts/` 读取；群号为 `1071797934` 与 `695523861`，二维码链接是否继续可用以 QQ 客户端为准。
+- 首页中的入口来自 `data/home.yaml`，最新文章从 `content/posts/` 读取；QQ 群号为 `1071797934` 与 `695523861`，Telegram 为 [@hustca](https://t.me/hustca)。交流入口集中在 `content/join/index.md`，二维码链接是否继续可用以 QQ 客户端为准。
 
 主页域名为 `hustca.cn`，当前临时 HTTPS 入口为 [https://hustca.cn:404/](https://hustca.cn:404/)。入口可访问不表示占位内容已获确认，也不表示备案要求已满足。
 
