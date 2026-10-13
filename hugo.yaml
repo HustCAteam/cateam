@@ -21,8 +21,8 @@ params:
     logo:
       path: /media/ca-logo.webp
       dark: /media/ca-logo.webp
-      width: 36
-      height: 36
+      width: 28
+      height: 28
   theme:
     default: system
     displayToggle: true

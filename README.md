@@ -7,7 +7,7 @@
 ## 当前状态
 
 - 使用 [gentoozh-theme](https://github.com/Gentoo-zh/gentoozh-theme) `v0.3.23`，在 Hextra 之上提供 Gentoo 风格、Bento 首页及文章／贡献者页面模板。当前锁定的 Hextra 版本为 `v0.13.0`。
-- 沿用 Gentoo 原生 Bento 网格、文章卡片、共建方向卡片、文档侧栏、搜索与深浅色模式，不重写主题配色和整套布局。
+- 沿用 Gentoo 原生 Bento 网格、文章卡片、共建方向卡片、文档侧栏和搜索，不重写页面结构；明暗配色采用从计协 Logo 蓝绿主色生成的 Material 3 色板。
 - 已有首页、协会介绍、加入与交流、Touranki 项目展台、文章与活动、共学手册、四个共建方向及网站共建指南；文章标签、RSS、手机导航、群号复制和 404 页面均有对应入口。
 - 使用本机提供的原版 CA Logo、两张最新招新海报及对应二维码、历史义务维修招牌裁图，以及 Touranki 项目既有背景。来源、裁剪方法和公开范围记录在 `data/materials.yaml`；未发布人脸合照、旧二维码、私人表单或原始 PPT。
 - 协会介绍与参与方向依据已有公开资料整理。`content/posts/activity-example/` 是明确标注的活动文案示例；`content/contributors/` 展示软件、硬件、内容设计和活动运营方向，成员档案待补充，不虚构人物或提交次数。
@@ -53,7 +53,9 @@ hugo --environment production --minify
 - `layouts/shortcodes/home-bento.html` 保留原生 Bento 类名，改用计协数据，去掉 Gentoo 专属的固定社交链接与运行天数。
 - `layouts/contributors/list.html` 复用原生卡片，展示参与方向，不套用上游由权重推算提交次数的逻辑。
 - `layouts/_partials/` 通过主题扩展点替换站点身份、图标、元信息与页脚；`layouts/404.html` 沿用主题错误页样式。
-- 原主题 `assets/css/custom.css` 未覆盖；`assets/css/site.css` 仅补充本站媒体尺寸与标题换行，经 `custom/head-end` 加载。
+- 原主题 `assets/css/custom.css` 未覆盖；`assets/css/site.css` 经 `custom/head-end` 加载，承载站点配色、导航适配、媒体尺寸与标题换行。
+- 色板使用 Material 官方 `material-color-utilities` 的 Tonal Spot／标准对比度方案：Logo 蓝 `#0ea1d7` 生成主色及中性表面，绿 `#32b76c` 生成辅助色。明暗语义色固化在 CSS 中，浏览器不加载配色库；按钮、标签、搜索弹窗与页面表面共用这些变量。
+- 导航 Logo 在 `hugo.yaml` 中设为 `28 × 28`；搜索文字与快捷键保持单行、不参与挤压，低于 `64rem` 时显示带无障碍名称的搜索图标，点击仍打开完整搜索弹窗。
 - Hugo Module 版本继续由 `go.mod`、`go.sum` 锁定。主题许可位于 `static/licenses/`；素材没有因此统一改授 MIT 或 CC 许可。
 
 ## 版本管理与发布
