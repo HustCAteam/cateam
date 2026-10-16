@@ -73,22 +73,27 @@ hugo --environment production --minify
 
 - 入口为 [https://pg.hustca.cn:404/](https://pg.hustca.cn:404/)，DNS A 记录指向 `121.40.128.93`。404 端口直接提供 HTTPS 页面，不是跳转到 80 端口；备案及后续端口调整仍由服务器维护者处理。
 - 总共 **10 条规则**，逐步解锁、持续复查，包含 `1037`、`绝望坡`、小写 `cateam`，以及长度、数字、大写、半角标点、数字和、英文月份与罗马数字乘积。全部同时满足后才能提交；没有隐藏的第十一关。
-- 游戏是原生 HTML/CSS/ES Module 静态站点，不依赖 Hugo，也不复刻 Gentoo 模板。复用计协 Logo 与蓝绿 Material 配色，适配手机和系统暗色模式；灵感来自 [The Password Game](https://neal.fun/password-game/)，不是原作官方版本。
-- 输入只保留在页面内存，不发送、不持久化、不进入 URL；刷新重开。页面明确提醒不要输入真实密码。通关后提供计协招新页与 [Telegram 社群](https://t.me/hustca) 入口。
-- 浏览器需要支持 `Intl.Segmenter`；汉字和完整表情按用户感知的字符计数。开发需要 Node.js 22+，无 npm 依赖；在 **password-game 仓库**运行 `npm test`、`npm run build`，再用 `npm run preview` 在 `http://127.0.0.1:18405/` 预览（预览命令另需 Python 3）。
-- 规则文案与判定集中在 `src/rules.js`，交互在 `src/app.js`，样式在 `src/styles.css`。`scripts/build.mjs` 仅发布六个必要文件到 `public/`；测试和仓库文件不对外提供，构建产物不纳入小游戏 Git 仓库。
+- 前端使用原生 HTML/CSS/ES Module，服务端使用 Node.js 24+ 与内置 SQLite，不依赖 Hugo，也不复刻 Gentoo 模板。复用计协 Logo 与蓝绿 Material 配色，适配手机和系统暗色模式；灵感来自 [The Password Game](https://neal.fun/password-game/)，不是原作官方版本。
+- 普通游玩、通关和勾选同意都不会上传输入。只有通关后明确勾选公开同意，再点击「公开分享」，完整游戏密码才会上传、保存并向所有访客公开；页面禁止使用真实密码或个人信息。刷新和重新开始只清空本地游戏，不删除公开记录；当前没有玩家自助撤回接口。通关后仍提供招新页与 [Telegram 社群](https://t.me/hustca) 入口。
+- 「公开解法」默认折叠并标明剧透，访客无需通关即可主动展开查看；支持刷新、每页 12 条的游标分页、空列表及失败重试。密码仅作为文字渲染，不执行其中的 HTML。
+- 浏览器需要支持 `Intl.Segmenter`；汉字和完整表情按用户感知的字符计数。开发需要 Node.js 24+，无 npm 依赖；在 **password-game 仓库**运行 `npm test`、`npm run build`，再用 `npm run preview` 在 `http://127.0.0.1:18405/` 预览真实页面与 API。本地数据在被 Git 和 Docker 构建忽略的 `.data/shares.sqlite`。
+- 前后端共同使用 `src/rules.js` 判定十条规则，避免浏览器伪造通关结果；交互在 `src/app.js`、`src/shares.js`，共享分享限制在 `src/share-policy.js`，HTTP/SQLite 服务在 `server/`。`scripts/build.mjs` 只复制必要前端文件到 `public/`；测试、数据库、服务端源码及 Git 文件不对外提供，构建产物不纳入小游戏 Git 仓库。
 
-服务器源码在 `/root/password-game`，发布目录为 `/root/password-game/public`。Compose 的 `password-game` 服务使用已缓存的 `caddy:2.10.2-alpine`，以非 root 用户只读提供静态文件，**不新增宿主机端口**；现有网关通过 Compose 内网反向代理，并复用 404／443 端口。小游戏站点禁用过期缓存，CSP 禁止脚本发起连接和表单外送。
+服务器源码在 `/root/password-game`，生产前端和 API 一同构建进 `cateam/password-game:local` 镜像。Compose 的 `password-game` 服务以非 root 用户运行，只读根文件系统，**不新增宿主机端口**；现有网关通过 Compose 内网反向代理，复用 404／443 端口。静态页面使用 `no-cache`，API 使用 `no-store`；CSP 仅允许同源连接，仍禁止表单外送。Caddy 覆盖 `X-Game-Client-IP`，服务端仅在启用 `TRUST_PROXY=1` 时信任该值，避免客户端伪造限流来源。
 
-小游戏源码修改后先提交、推送 GitHub，并将对应提交同步至服务器源码仓库。SSH 与 GitHub 各自需要有效的密钥或认证；发布脚本不保存 GitHub 凭据，也不自动执行 `git pull`。在具有 Node.js、`rsync` 和密钥 SSH 的部署工作机上运行：
+分享数据位于命名卷 `cateam_password_game_data` 内的 `/data/shares.sqlite`，开启 WAL 与同步持久化；重启或更换容器不清空记录。**不要执行 `docker compose down -v`，不要将数据库或 WAL 文件提交到 Git 或放进 `public/`。** 备份应使用 SQLite 备份接口，或只停止小游戏后备份完整数据卷，不能只复制运行中的主数据库文件而忽略 WAL。需要移除公开内容时，由服务器维护者在数据库中按记录 ID 处理。
+
+`POST /api/shares` 只接受本站来源、JSON 和显式 `consent: true`，并重新检查全部十条规则；完全相同的密码去重。公开分享另限 256 个字符、4096 个 UTF-8 字节，请求体最多 16 KiB；这些限制不影响原有十条规则通关。每个客户端每分钟最多 60 次提交尝试，限流地址只保存在有界内存中，不写入数据库；最多保存 10000 条记录，满后拒绝新增但仍可浏览、识别重复，不静默删除旧记录。`GET /api/shares` 支持 `before` 游标，`GET /healthz` 检查服务和数据库可读性。
+
+小游戏源码修改后先提交、推送 GitHub，并将对应提交同步至服务器源码仓库。SSH 与 GitHub 各自需要有效的密钥或认证；发布脚本不保存 GitHub 凭据，也不自动执行 `git pull`。在具有 Docker、`rsync` 和密钥 SSH 的部署工作机上运行：
 
 ```bash
 # 在本仓库运行；默认 SSH 别名为 cateam
 bash deploy/scripts/deploy-password-game.sh
 ```
 
-该脚本通过 `build-password-game.sh` 归档服务器**已提交 HEAD**，在工作机生成静态文件后上传；不发布未提交改动。它只启动／更新小游戏服务，验证并热加载 Caddy，不重建网关或 Touranki 后端。仅更新小游戏时，不要改用完整 `deploy.sh`。
+该脚本通过 `build-password-game.sh` 归档服务器**已提交 HEAD**，使用锁定摘要的 Node 24 Alpine 基础镜像在工作机构建完整镜像，再通过 SSH 传给服务器；不发布未提交改动，也不依赖服务器访问 Docker Hub。它只更新小游戏容器、保留 SQLite 数据卷，验证并热加载 Caddy，不重建网关或 Touranki 后端。仅更新小游戏时，不要改用完整 `deploy.sh`。
 
-如 SSH 不可达，可通过已经固定证书身份的 Portainer Docker API 传输 Git bundle、静态文件及这份版本化配置，再执行同样的限定操作：`docker compose --project-directory /root/cateam up -d --no-deps --no-build --pull never --wait password-game`，随后在 `gateway` 内运行 `caddy validate` 和 `caddy reload`。先确保源文件与产物来自同一提交；临时维护容器用后删除，凭据不得写入仓库。
+如 SSH 不可达，可通过已经固定证书身份的 Portainer Docker API 传输 Git bundle、已构建镜像及这份版本化配置，再执行同样的限定操作：`docker compose --project-directory /root/cateam up -d --no-deps --no-build --pull never --wait password-game`，随后在 `gateway` 内运行 `caddy validate` 和 `caddy reload`。先确保源码与镜像来自同一提交；临时维护容器用后删除，凭据不得写入仓库。旧的宿主机 `/root/password-game/public` 静态挂载已退出生产发布流程。
 
 主题与首页示例分别来自 [Gentoo 主题仓库](https://github.com/Gentoo-zh/gentoozh-theme)和 [Gentoo 官网源码](https://github.com/Gentoo-zh/gentoo-zh.github.io)。使用或改写上游资源时，应遵守其原有许可证并保留必要署名。
