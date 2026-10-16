@@ -24,6 +24,29 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  password-game:
+    image: caddy:2.10.2-alpine
+    entrypoint: ["caddy"]
+    command: ["file-server", "--root", "/srv/password-game", "--listen", ":8080"]
+    restart: unless-stopped
+    user: "65532:65532"
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    volumes:
+      - /root/password-game/public:/srv/password-game:ro
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/"]
+      interval: 15s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
   touranki-server:
     image: cateam/touranki-server:local
     build:

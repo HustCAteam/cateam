@@ -30,7 +30,7 @@
 | `public/` | 已构建的静态站点，当前纳入 Git 版本管理 |
 | `deploy/` | 非敏感编排配置、Caddy 配置、镜像定义及发布脚本 |
 
-Touranki 的游戏源码不在本仓库：分别由 [touranki-web](https://github.com/HustCAteam/touranki-web)、[touranki-server](https://github.com/HustCAteam/touranki-server) 与 [touranki-core](https://github.com/HustCAteam/touranki-core) 管理。`deploy/` 中包含主页与 Touranki 共享的服务器部署配置。
+Touranki 的游戏源码不在本仓库：分别由 [touranki-web](https://github.com/HustCAteam/touranki-web)、[touranki-server](https://github.com/HustCAteam/touranki-server) 与 [touranki-core](https://github.com/HustCAteam/touranki-core) 管理。招新密码小游戏由独立的 [password-game](https://github.com/HustCAteam/password-game) 私有仓库管理。`deploy/` 保存这三个站点共享的服务器部署配置，不包含小游戏源码。
 
 ## 本地预览与构建
 
@@ -63,10 +63,32 @@ hugo --environment production --minify
 修改主页源码后，需要重新构建 `public/`，将源码和对应静态产物一起提交、推送 GitHub。**单纯推送源码不会自动重新生成或部署网站。**
 
 - `deploy/scripts/stage-mainpage.sh` 只读取远端主页仓库已提交 HEAD 中的 `public/`，不自动运行 Hugo，也不使用本机旧副本覆盖远端源码。
-- `deploy/scripts/deploy.sh` 是主页与 Touranki 的完整发布入口，需要预先配置构建工具、Docker 与密钥 SSH；它不是通用的一键安装脚本。
+- `deploy/scripts/deploy.sh` 是主页、Touranki 与招新密码小游戏的完整发布入口，需要预先配置构建工具、Docker 与密钥 SSH，并准备三个项目的远端源码仓库；它不是通用的一键安装脚本。
 - 完整发布会同步编排配置并更新服务，可能重建 Touranki 后端。后端房间、会话与对局保存在内存中，重建会丢失这些状态；仅修改主页时，不应未经核对就执行完整发布。
 - 服务器当前运行目录为 `/root/cateam`，配置的版本化副本在本仓库 `deploy/`。修改运行配置后，应同步版本化副本并提交，避免运行状态与 Git 记录分叉。
 - Caddy 的 `hustca.cn` 站点错误处理会以原 404 状态返回 `public/404.html`；不改 Touranki 路由及现有 404／443 端口映射。
 - 密码、私钥、面板凭据和其他秘密不得提交到仓库。
+
+### 招新小游戏：喻家山密码挑战
+
+- 入口为 [https://pg.hustca.cn:404/](https://pg.hustca.cn:404/)，DNS A 记录指向 `121.40.128.93`。404 端口直接提供 HTTPS 页面，不是跳转到 80 端口；备案及后续端口调整仍由服务器维护者处理。
+- 总共 **10 条规则**，逐步解锁、持续复查，包含 `1037`、`绝望坡`、小写 `cateam`，以及长度、数字、大写、半角标点、数字和、英文月份与罗马数字乘积。全部同时满足后才能提交；没有隐藏的第十一关。
+- 游戏是原生 HTML/CSS/ES Module 静态站点，不依赖 Hugo，也不复刻 Gentoo 模板。复用计协 Logo 与蓝绿 Material 配色，适配手机和系统暗色模式；灵感来自 [The Password Game](https://neal.fun/password-game/)，不是原作官方版本。
+- 输入只保留在页面内存，不发送、不持久化、不进入 URL；刷新重开。页面明确提醒不要输入真实密码。通关后提供计协招新页与 [Telegram 社群](https://t.me/hustca) 入口。
+- 浏览器需要支持 `Intl.Segmenter`；汉字和完整表情按用户感知的字符计数。开发需要 Node.js 22+，无 npm 依赖；在 **password-game 仓库**运行 `npm test`、`npm run build`，再用 `npm run preview` 在 `http://127.0.0.1:18405/` 预览（预览命令另需 Python 3）。
+- 规则文案与判定集中在 `src/rules.js`，交互在 `src/app.js`，样式在 `src/styles.css`。`scripts/build.mjs` 仅发布六个必要文件到 `public/`；测试和仓库文件不对外提供，构建产物不纳入小游戏 Git 仓库。
+
+服务器源码在 `/root/password-game`，发布目录为 `/root/password-game/public`。Compose 的 `password-game` 服务使用已缓存的 `caddy:2.10.2-alpine`，以非 root 用户只读提供静态文件，**不新增宿主机端口**；现有网关通过 Compose 内网反向代理，并复用 404／443 端口。小游戏站点禁用过期缓存，CSP 禁止脚本发起连接和表单外送。
+
+小游戏源码修改后先提交、推送 GitHub，并将对应提交同步至服务器源码仓库。SSH 与 GitHub 各自需要有效的密钥或认证；发布脚本不保存 GitHub 凭据，也不自动执行 `git pull`。在具有 Node.js、`rsync` 和密钥 SSH 的部署工作机上运行：
+
+```bash
+# 在本仓库运行；默认 SSH 别名为 cateam
+bash deploy/scripts/deploy-password-game.sh
+```
+
+该脚本通过 `build-password-game.sh` 归档服务器**已提交 HEAD**，在工作机生成静态文件后上传；不发布未提交改动。它只启动／更新小游戏服务，验证并热加载 Caddy，不重建网关或 Touranki 后端。仅更新小游戏时，不要改用完整 `deploy.sh`。
+
+如 SSH 不可达，可通过已经固定证书身份的 Portainer Docker API 传输 Git bundle、静态文件及这份版本化配置，再执行同样的限定操作：`docker compose --project-directory /root/cateam up -d --no-deps --no-build --pull never --wait password-game`，随后在 `gateway` 内运行 `caddy validate` 和 `caddy reload`。先确保源文件与产物来自同一提交；临时维护容器用后删除，凭据不得写入仓库。
 
 主题与首页示例分别来自 [Gentoo 主题仓库](https://github.com/Gentoo-zh/gentoozh-theme)和 [Gentoo 官网源码](https://github.com/Gentoo-zh/gentoo-zh.github.io)。使用或改写上游资源时，应遵守其原有许可证并保留必要署名。
