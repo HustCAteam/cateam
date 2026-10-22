@@ -24,3 +24,7 @@ jobs:
           probe ipv4 --ipv4 https://hustca.cn:404/
           probe direct-server --resolve hustca.cn:404:121.40.128.93 https://hustca.cn:404/
           probe standard-https https://hustca.cn/
+          probe http1 --http1.1 https://hustca.cn:404/
+          probe tls12 --tls-max 1.2 https://hustca.cn:404/
+          probe password-game https://pg.hustca.cn:404/healthz
+          probe touranki https://touranki.1037.games:404/healthz
