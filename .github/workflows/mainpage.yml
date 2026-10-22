@@ -1,0 +1,187 @@
+name: Mainpage
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    name: Hugo build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      GOTOOLCHAIN: local
+      HUGO_VERSION: '0.154.5'
+    outputs:
+      archive_sha256: ${{ steps.package.outputs.archive_sha256 }}
+      index_sha256: ${{ steps.package.outputs.index_sha256 }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up fixed Go toolchain
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: '1.27.3'
+          cache: false
+
+      - name: Compile Hugo extended with Go 1.27.3
+        env:
+          CGO_ENABLED: '1'
+          GOBIN: ${{ runner.temp }}/hugo-bin
+        run: |
+          set -euo pipefail
+          test "$(go env GOVERSION)" = 'go1.27.3'
+          go install -tags extended "github.com/gohugoio/hugo@v${HUGO_VERSION}"
+          printf '%s\n' "$GOBIN" >> "$GITHUB_PATH"
+
+      - name: Test restricted publisher
+        run: python3 -m unittest discover -s deploy/tests -v
+
+      - name: Build production homepage
+        env:
+          GOFLAGS: -mod=readonly
+        run: hugo --environment production --minify --cleanDestinationDir --gc
+
+      - name: Package homepage and checksums
+        id: package
+        run: |
+          set -euo pipefail
+          test -s public/index.html
+          test -s public/404.html
+          mkdir -p "$RUNNER_TEMP/mainpage-artifact"
+          tar --format=posix -czf "$RUNNER_TEMP/mainpage-artifact/site.tar.gz" -C public .
+          read -r index_sha256 _ < <(sha256sum public/index.html)
+          read -r archive_sha256 _ < <(sha256sum "$RUNNER_TEMP/mainpage-artifact/site.tar.gz")
+          printf '%s\n' "$index_sha256" > "$RUNNER_TEMP/mainpage-artifact/index.sha256"
+          printf 'index_sha256=%s\narchive_sha256=%s\n' "$index_sha256" "$archive_sha256" >> "$GITHUB_OUTPUT"
+
+      - name: Transfer publishable archive only
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: hustca-site
+          path: ${{ runner.temp }}/mainpage-artifact/site.tar.gz
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
+          overwrite: true
+
+  deploy:
+    name: Publish homepage
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: production
+    steps:
+      # Deliberately no checkout: this job never executes repository source.
+      - name: Download same-run homepage archive
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: hustca-site
+          path: ${{ runner.temp }}/mainpage-artifact
+          digest-mismatch: error
+
+      - name: Verify transferred archive
+        env:
+          ARCHIVE_SHA256: ${{ needs.build.outputs.archive_sha256 }}
+          INDEX_SHA256: ${{ needs.build.outputs.index_sha256 }}
+        run: |
+          set -euo pipefail
+          [[ "$ARCHIVE_SHA256" =~ ^[0-9a-f]{64}$ ]]
+          [[ "$INDEX_SHA256" =~ ^[0-9a-f]{64}$ ]]
+          cd "$RUNNER_TEMP/mainpage-artifact"
+          printf '%s  site.tar.gz\n' "$ARCHIVE_SHA256" | sha256sum --check --strict -
+          printf '%s\n' "$INDEX_SHA256" > index.sha256
+
+      - name: Skip obsolete main revisions
+        id: current
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          current_sha=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq '.object.sha')
+          if [[ "$current_sha" == "$GITHUB_SHA" ]]; then
+            printf 'publish=true\n' >> "$GITHUB_OUTPUT"
+          else
+            printf 'publish=false\n' >> "$GITHUB_OUTPUT"
+            printf 'Skipping obsolete revision %s; main is %s.\n' "$GITHUB_SHA" "$current_sha"
+          fi
+
+      - name: Publish through restricted SSH command
+        if: steps.current.outputs.publish == 'true'
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+          DEPLOY_PORT: ${{ vars.DEPLOY_PORT }}
+          DEPLOY_USER: ${{ vars.DEPLOY_USER }}
+          SSH_KNOWN_HOSTS: ${{ vars.SSH_KNOWN_HOSTS }}
+          ARCHIVE_SHA256: ${{ needs.build.outputs.archive_sha256 }}
+        run: |
+          set -euo pipefail
+          umask 077
+          credentials="$RUNNER_TEMP/mainpage-ssh"
+          trap 'rm -rf -- "$credentials"' EXIT
+          mkdir -m 700 "$credentials"
+          test -n "$DEPLOY_SSH_KEY"
+          test -n "$SSH_KNOWN_HOSTS"
+          test -n "$DEPLOY_HOST"
+          test -n "$DEPLOY_USER"
+          [[ "$DEPLOY_PORT" =~ ^[0-9]{1,5}$ ]]
+          printf '%s\n' "$DEPLOY_SSH_KEY" > "$credentials/key"
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > "$credentials/known_hosts"
+          unset DEPLOY_SSH_KEY SSH_KNOWN_HOSTS
+          ssh -F /dev/null -T \
+            -o BatchMode=yes \
+            -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile="$credentials/known_hosts" \
+            -o GlobalKnownHostsFile=/dev/null \
+            -o IdentitiesOnly=yes \
+            -o IdentityAgent=none \
+            -o ForwardAgent=no \
+            -o ClearAllForwardings=yes \
+            -o PermitLocalCommand=no \
+            -o ConnectTimeout=15 \
+            -o ServerAliveInterval=15 \
+            -o ServerAliveCountMax=3 \
+            -i "$credentials/key" -p "$DEPLOY_PORT" -l "$DEPLOY_USER" \
+            -- "$DEPLOY_HOST" \
+            "publish $GITHUB_SHA $GITHUB_RUN_ID $GITHUB_RUN_ATTEMPT $ARCHIVE_SHA256" \
+            < "$RUNNER_TEMP/mainpage-artifact/site.tar.gz"
+
+      - name: Verify live HTTPS homepage checksum
+        if: steps.current.outputs.publish == 'true'
+        env:
+          SITE_URL: ${{ vars.SITE_URL }}
+        run: |
+          set -euo pipefail
+          [[ "$SITE_URL" == https://* ]]
+          cd "$RUNNER_TEMP/mainpage-artifact"
+          curl --fail --silent --show-error --location \
+            --proto '=https' --proto-redir '=https' \
+            --connect-timeout 15 --max-time 60 \
+            --header 'Cache-Control: no-cache' \
+            --output live-index.html "$SITE_URL"
+          read -r expected < index.sha256
+          printf '%s  live-index.html\n' "$expected" | sha256sum --check --strict -
+
+      - name: Remove SSH credentials even on failure
+        if: always()
+        run: rm -rf -- "$RUNNER_TEMP/mainpage-ssh"

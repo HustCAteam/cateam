@@ -1,0 +1,6 @@
+/public/
+/resources/
+/.hugo_build.lock
+/site.tar.gz
+/index.sha256
+__pycache__/
