@@ -5,6 +5,7 @@ import contextlib
 import fcntl
 import gzip
 import hashlib
+import http.client
 import json
 import os
 from pathlib import Path, PurePosixPath
@@ -12,6 +13,7 @@ import re
 import secrets
 import shutil
 import signal
+import ssl
 import stat
 import sys
 import tarfile
@@ -32,11 +34,15 @@ RELEASE_RE = re.compile(r"(0|[1-9][0-9]{0,19})-(0|[1-9][0-9]{0,19})-([0-9a-f]{40
 COMMAND_RE = re.compile(
     r"publish ([0-9a-f]{40}) ([0-9]{1,20}) ([0-9]{1,20}) ([0-9a-f]{64})\Z"
 )
+VERIFY_COMMAND_RE = re.compile(
+    r"verify ([0-9a-f]{40}) ([0-9]{1,20}) ([0-9]{1,20}) ([0-9a-f]{64}) (\S+)\Z"
+)
+VERIFY_URL_RE = re.compile(r"https://hustca\.cn(?::(404|443))?/?\Z")
 RECEIPT_KEYS = {"revision", "run_id", "run_attempt", "archive_sha256", "index_sha256"}
 
 
 class PublishError(Exception):
-    """A rejected command or publication; the previous current stays active."""
+    """A rejected operation that does not advance the published version."""
 
 
 def sequence(receipt):
@@ -51,7 +57,7 @@ def validate_identity(revision, run_id, run_attempt, digest):
     if not isinstance(revision, str) or not REVISION_RE.fullmatch(revision):
         raise PublishError("invalid revision")
     if not isinstance(digest, str) or not DIGEST_RE.fullmatch(digest):
-        raise PublishError("invalid archive digest")
+        raise PublishError("invalid content digest")
     for value in (run_id, run_attempt):
         if type(value) is not int or not 0 <= value < 10**20:
             raise PublishError("invalid run identifier")
@@ -156,6 +162,43 @@ class Publisher:
     def status(self):
         with self.locked():
             return self._status()
+
+    def verify(self, revision, run_id, run_attempt, index_sha256, url):
+        validate_identity(revision, run_id, run_attempt, index_sha256)
+        target = VERIFY_URL_RE.fullmatch(url) if isinstance(url, str) else None
+        if target is None:
+            raise PublishError("verification is limited to the homepage HTTPS origin")
+        with self.locked():
+            receipt = self._status()
+            if receipt is None or (
+                receipt["revision"] != revision
+                or sequence(receipt) != (run_id, run_attempt)
+                or receipt["index_sha256"] != index_sha256
+            ):
+                raise PublishError("requested verification does not match the current release")
+            connection = http.client.HTTPSConnection(
+                "hustca.cn", int(target.group(1) or 443), timeout=30,
+                context=ssl.create_default_context(),
+            )
+            try:
+                connection.request("GET", "/", headers={
+                    "Cache-Control": "no-cache", "Accept-Encoding": "identity",
+                })
+                with connection.getresponse() as response:
+                    if response.status != 200:
+                        raise PublishError(f"homepage returned HTTP {response.status}")
+                    digest = hashlib.sha256()
+                    total = 0
+                    for chunk in iter(lambda: response.read(CHUNK_SIZE), b""):
+                        total += len(chunk)
+                        if total > MAX_EXPANDED:
+                            raise PublishError("homepage response exceeds limit")
+                        digest.update(chunk)
+                    if digest.hexdigest() != index_sha256:
+                        raise PublishError("live HTTPS homepage does not match the build")
+            finally:
+                connection.close()
+            return dict(receipt, verified_url=url, http_status=200)
 
     def _upload(self, source, destination, expected_digest):
         digest = hashlib.sha256()
@@ -330,19 +373,27 @@ def main():
         if len(sys.argv) != 1:
             raise PublishError("command-line arguments are forbidden")
         match = COMMAND_RE.fullmatch(command)
-        if command != "status" and match is None:
+        verification = VERIFY_COMMAND_RE.fullmatch(command)
+        if command != "status" and match is None and verification is None:
             raise PublishError("unsupported SSH command")
         signal.signal(signal.SIGALRM, _timeout)
         publisher = Publisher()
         if command == "status":
             result = publisher.status()
+        elif verification is not None:
+            revision, run_id, run_attempt, digest, url = verification.groups()
+            signal.setitimer(signal.ITIMER_REAL, TIMEOUT_SECONDS)
+            try:
+                result = publisher.verify(revision, int(run_id), int(run_attempt), digest, url)
+            finally:
+                signal.setitimer(signal.ITIMER_REAL, 0)
         else:
             revision, run_id, run_attempt, digest = match.groups()
             result = publisher.publish(revision, int(run_id), int(run_attempt), digest, TimedInput(sys.stdin.buffer))
         print(json.dumps(result, sort_keys=True))
         return 0
-    except (PublishError, OSError, EOFError, tarfile.TarError, ValueError) as error:
-        print(f"publication rejected: {error}", file=sys.stderr)
+    except (PublishError, OSError, EOFError, tarfile.TarError, http.client.HTTPException, ValueError) as error:
+        print(f"command failed: {error}", file=sys.stderr)
         return 1
 
 

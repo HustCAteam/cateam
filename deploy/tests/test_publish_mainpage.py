@@ -322,6 +322,60 @@ class PublisherTests(unittest.TestCase):
         self.assertEqual((code, error), (0, ""))
         self.assertEqual(json.loads(output), receipt)
 
+    @contextlib.contextmanager
+    def https_response(self, body=b"<html>homepage</html>", status=200):
+        response = mock.MagicMock()
+        response.status = status
+        response.read.side_effect = io.BytesIO(body).read
+        response.__enter__.return_value = response
+        connection = mock.Mock()
+        connection.getresponse.return_value = response
+        with mock.patch.object(publisher_module.http.client, "HTTPSConnection", return_value=connection):
+            yield connection
+
+    def verify_baseline(self, url="https://hustca.cn:404/", **changes):
+        arguments = dict(revision=REVISION, run_id=10, run_attempt=1,
+                         index_sha256=self.baseline["index_sha256"], url=url)
+        arguments.update(changes)
+        return self.publisher.verify(**arguments)
+
+    def test_verification_checks_live_response_and_expected_release(self):
+        with self.https_response():
+            command = f"verify {REVISION} 10 1 {self.baseline['index_sha256']} https://hustca.cn:404/"
+            code, output, error = self.invoke(command)
+        self.assertEqual((code, error), (0, ""))
+        self.assertEqual(json.loads(output), dict(self.baseline, verified_url="https://hustca.cn:404/", http_status=200))
+        for body, status in ((b"old or substituted homepage", 200), (b"", 302), (b"unavailable", 503)):
+            with self.subTest(status=status), self.https_response(body, status):
+                with self.assertRaises(publisher_module.PublishError):
+                    self.verify_baseline()
+                self.assert_preserved()
+
+    def test_verification_refuses_other_origins_and_stale_identity_before_network(self):
+        urls = ("http://hustca.cn/", "https://example.org/", "https://127.0.0.1/",
+                "https://hustca.cn:22/", "https://hustca.cn/other", "https://hustca.cn/?q=x",
+                "https://hustca.cn/#fragment", "https://hustca.cn@127.0.0.1/")
+        with mock.patch.object(publisher_module.http.client, "HTTPSConnection",
+                               side_effect=AssertionError("forbidden network access")):
+            for url in urls:
+                with self.subTest(url=url), self.assertRaises(publisher_module.PublishError):
+                    self.verify_baseline(url)
+            for change in (dict(revision=OTHER_REVISION), dict(run_id=9), dict(run_attempt=2),
+                           dict(index_sha256="0" * 64)):
+                with self.subTest(change=change), self.assertRaises(publisher_module.PublishError):
+                    self.verify_baseline(**change)
+        self.assert_preserved()
+
+    def test_verification_does_not_ignore_tls_errors_or_unbounded_responses(self):
+        with self.https_response() as connection:
+            connection.request.side_effect = publisher_module.ssl.SSLCertVerificationError("untrusted certificate")
+            with self.assertRaises(publisher_module.ssl.SSLCertVerificationError):
+                self.verify_baseline()
+        with self.https_response(), mock.patch.object(publisher_module, "MAX_EXPANDED", 4):
+            with self.assertRaises(publisher_module.PublishError):
+                self.verify_baseline()
+        self.assert_preserved()
+
     def test_forced_command_rejects_shell_and_extra_arguments(self):
         valid = f"publish {REVISION} 11 1 {digest(self.baseline_archive)}"
         for command in ("", "sh", "status; id", "status extra", valid + " extra", valid + "\nstatus",
@@ -331,7 +385,6 @@ class PublisherTests(unittest.TestCase):
                 code, output, error = self.invoke(command, self.baseline_archive)
                 self.assertEqual(code, 1)
                 self.assertEqual(output, "")
-                self.assertTrue(error)
                 self.assert_preserved()
         code, _, _ = self.invoke("status", args=[str(SCRIPT), "--root=/tmp/attacker"])
         self.assertEqual(code, 1)

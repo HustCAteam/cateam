@@ -62,7 +62,7 @@ hugo --environment production --minify --cleanDestinationDir --gc
 
 ## 版本管理与发布
 
-**只提交源码和资源，不提交 `public/`、`resources/` 或 `.hugo_build.lock`。** PR 的 `Hugo build` 检查会运行发布器边界测试并构建完整站点；合并到 `main` 后，GitHub Actions 自动构建、发布到 [https://hustca.cn:404/](https://hustca.cn:404/)，再比对线上首页与本次构建的 SHA256。
+**只提交源码和资源，不提交 `public/`、`resources/` 或 `.hugo_build.lock`。** PR 的 `Hugo build` 检查会运行发布器边界测试并构建完整站点；合并到 `main` 后，GitHub Actions 自动构建、发布到 [https://hustca.cn:404/](https://hustca.cn:404/)，再通过受限命令请求官网 HTTPS 首页，核验本次发布版本与响应的 SHA256。
 
 ### 团队协作
 
@@ -75,14 +75,16 @@ hugo --environment production --minify --cleanDestinationDir --gc
 
 - `production` 环境只允许 `main` 分支部署。PR 构建没有生产密钥；部署 job 不检出源码，只接收同一次运行的静态归档并校验摘要。Actions 固定完整提交 SHA，主题模块只读，不在发布时更新依赖。
 - 环境 Secret `DEPLOY_SSH_KEY` 使用独立账号 `hustca-deploy` 的密钥，不能复用管理员私钥。环境 Variables 为 `DEPLOY_HOST`、`DEPLOY_PORT`、`DEPLOY_USER`、`SSH_KNOWN_HOSTS`、`SITE_URL`；当前分别指向服务器、SSH 22、发布账号、经可信 SSH 会话核对的主机公钥、上述 HTTPS 入口。不能临时扫描主机公钥代替身份核验，也不能关闭 SSH 或 HTTPS 校验。
-- 发布器源码为 `deploy/scripts/publish-mainpage.py`，服务器安装位置为 `/usr/local/libexec/hustca-publish.py`，由 root 拥有。发布账号没有 sudo/Docker 权限，账号的家目录和公钥文件由 root 管理；公钥使用 `restrict,command="/usr/local/libexec/hustca-publish.py"`，只允许 `status` 与受限的 `publish`，不允许 shell、SFTP 或端口转发。
-- 发布文件位于 `/srv/hustca/releases/<run_id>-<run_attempt>-<commit_sha>/`。完整上传、摘要与归档安全检查成功后，原子切换相对软链接 `current`；上传或检查失败不会替换现有站点。并发发布加锁，旧运行不能覆盖新运行；归档上限为压缩后 64 MiB、展开后 128 MiB、10,000 个成员，禁止路径穿越、链接及特殊文件。
+- 发布器源码为 `deploy/scripts/publish-mainpage.py`，服务器安装位置为 `/usr/local/libexec/hustca-publish.py`，由 root 拥有。发布账号没有 sudo/Docker 权限，账号的家目录和公钥文件由 root 管理；公钥使用 `restrict,command="/usr/local/libexec/hustca-publish.py"`，只允许 `status`、`publish`、`verify`，不允许 shell、SFTP 或端口转发。
+- `verify` 在服务器上通过 HTTPS 请求官网，只接受 `hustca.cn` 的 404／443 端口首页。证书与域名校验开启，不跟随重定向；当前提交、运行编号、HTTP 200 和响应 SHA256 必须与本次构建一致。初始化时，GitHub 海外 runner 到 `hustca.cn` 及其子域在 TLS 握手阶段被重置，同 IP 的 Touranki 域名正常；因此由服务器执行 HTTPS 验收，不降低 TLS 安全要求。这不代表海外链路已经恢复，也不替代异地可达性检查。
+- 发布文件位于 `/srv/hustca/releases/<run_id>-<run_attempt>-<commit_sha>/`。完整上传、摘要与归档安全检查成功后，原子切换相对软链接 `current`；上传或归档检查失败不会替换现有站点。并发发布加锁，旧运行不能覆盖新运行；归档上限为压缩后 64 MiB、展开后 128 MiB、10,000 个成员，禁止路径穿越、链接及特殊文件。
 - Caddy 挂载父目录 `/srv/hustca:/srv/mainpage:ro`，根目录为 `/srv/mainpage/current`。不能直接挂载 `current` 软链接，否则切换版本后容器可能继续读取旧目录。正常官网发布不重启 Caddy、Touranki 或密码小游戏。
 - 最近五个已发布版本保留供恢复，发布记录保存在不对外提供的 `receipts/` 中；GitHub 静态归档保留七天。
 
 ### 维护与回滚
 
 - 回滚通过撤销问题提交并提交 PR 完成，产生新的发布运行。不要重新运行旧提交的部署任务：旧提交和旧运行会被拒绝或跳过。仅需重发当前版本时，在 `Mainpage` 中选择 `main` 手动运行。
+- 发布后 HTTPS 验收失败会使 Actions 失败，但不会自动回滚已切换的版本。先根据日志和服务器发布记录判断故障位置，再决定是否回滚，不应仅凭网络探测失败覆盖已发布内容。
 - 紧急恢复可由服务器维护者将 `current` 原子切回 `releases/` 中已有版本，随后仍需撤销 Git 中的问题提交，避免下一次发布重新引入问题。
 - 修改发布器后，由维护者审查、运行 `python3 -m unittest discover -s deploy/tests -v`，再以 root 更新服务器安装副本；CI 发布账号不能改写自身程序。公钥轮换也由维护者同时更新 root 管理的 `authorized_keys` 与 GitHub 环境 Secret。
 - `deploy/scripts/deploy.sh` 是维护者在具备构建工具、Docker、密钥 SSH 和游戏源码仓库的发布环境使用的基础设施入口，不是服务器一键安装脚本。它只更新网关与游戏服务，不再读取或覆盖官网生成目录；运行时可能重建 Touranki 后端并丢失内存中的房间、会话与对局，不能拿来发布文章。
