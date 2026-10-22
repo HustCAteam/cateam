@@ -69,6 +69,17 @@ hugo --environment production --minify --cleanDestinationDir --gc
 - Caddy 的 `hustca.cn` 站点错误处理会以原 404 状态返回 `public/404.html`；不改 Touranki 路由及现有 404／443 端口映射。
 - 密码、私钥、面板凭据和其他秘密不得提交到仓库。
 
+### 证书信任安全更新（2026-10-22）
+
+- [PHP2Shell 公告](https://www.php.net/archive/2026.php#2026-10-21-5)对应 CVE-2026-109618／109619。服务器宿主机和四个生产容器均未部署 PHP、FPM、mod_php 或 FastCGI 路由，不受这两个漏洞影响；不要为此安装 PHP。
+- eMudhra 中间 CA 事件对应 [CVE-2026-111943 / GO-2026-6809](https://pkg.go.dev/vuln/GO-2026-6809)。Go 的修复是拒绝八个受损中间证书的公钥，不是更换网站自己的证书。现有站点使用 Let's Encrypt；证书及私钥继续保存在原 Caddy 数据卷中。
+- 网关镜像为 `cateam/caddy:2.11.7-go1.27.3`，由 `deploy/caddy.Dockerfile` 使用锁定摘要的官方 builder、Go 1.27.3 和 Caddy 2.11.7 源码构建。官方 Caddy 2.11.7 运行镜像的二进制仍由 Go 1.26.8 编译，不能只更新官方镜像标签就认为完成修复。构建使用 `goproxy.cn`，保留 Go 校验数据库及 TLS 验证；可通过 Docker 的 `--build-arg GOPROXY=...` 指定其他模块代理。
+- 面板使用 [Portainer CE 2.45.3](https://github.com/portainer/portainer/releases/tag/2.45.3)，官方修复包含 Go 1.26.10，并移除了镜像中的 emSign 根证书。升级前应检查外接的 SSO、LDAP、镜像仓库和 Git 服务是否使用 emSign 证书；当前面板使用本地账号认证。
+- 宿主机的 CA 库不含此次受影响的 G3／AAA 信任锚，但容器信任库彼此独立，不能以宿主机更新代替容器修复。离线验证使用 Mozilla 提供的八个公开中间证书：显式加入测试信任池后，旧 Go 1.27.1 接受八个，Go 1.27.3 全部拒绝；未使用私钥或对线上服务运行漏洞利用。
+- Touranki 和密码小游戏没有出站 HTTPS 或 mTLS 验证路径。Touranki 构建脚本已固定 Go 1.27.3，供下次正常发布使用；此次不重启在线 Touranki，以保留内存中的房间和会话。小游戏仅发布交流入口调整，规则和数据库版本不变。
+
+安全更新应先备份面板数据卷、校验并加载镜像，再分别定向更新 `gateway` 和独立面板项目中的 `portainer`，使用 `up -d --no-deps --no-build --pull never --wait`；不要运行全项目 `up` 或重启 Docker 守护进程。网关更换会短暂中断连接，面板更换不影响游戏后端。
+
 ### 招新小游戏：喻家山密码挑战
 
 - 入口为 [https://pg.hustca.cn:404/](https://pg.hustca.cn:404/)，DNS A 记录指向 `121.40.128.93`。404 端口直接提供 HTTPS 页面，不是跳转到 80 端口；备案及后续端口调整仍由服务器维护者处理。

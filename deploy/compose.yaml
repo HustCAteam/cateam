@@ -2,7 +2,7 @@ name: cateam
 
 services:
   gateway:
-    image: caddy:2.10.2-alpine
+    image: cateam/caddy:2.11.7-go1.27.3
     restart: unless-stopped
     ports:
       - "80:80"

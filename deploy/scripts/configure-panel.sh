@@ -5,7 +5,7 @@ repo_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 ssh_host="${SSH_HOST:-cateam}"
 remote_root=/root/cateam/panel
 password_file="${PORTAINER_PASSWORD_FILE:-$HOME/.ssh/cateam_portainer_password}"
-image_ref='portainer/portainer-ce:2.45.2@sha256:03f94a406496dc84d37b552795fc424ccad8d0d7200353b6a82915f6e8f73ab0'
+image_ref='portainer/portainer-ce:2.45.3@sha256:3609c307943bca8e5c492f69ddd6965df177208b50678a4cff28391c8dd4e96e'
 
 # Keep the bootstrap credential outside the repository and out of command output.
 if [[ ! -s "$password_file" ]]; then
@@ -17,8 +17,8 @@ chmod 600 -- "$password_file"
 if ! docker image inspect "$image_ref" >/dev/null 2>&1; then
   docker pull "$image_ref"
 fi
-docker tag "$image_ref" portainer/portainer-ce:2.45.2
-docker image save portainer/portainer-ce:2.45.2 | ssh "$ssh_host" docker image load
+docker tag "$image_ref" portainer/portainer-ce:2.45.3
+docker image save portainer/portainer-ce:2.45.3 | ssh "$ssh_host" docker image load
 
 ssh "$ssh_host" "install -d -m 700 '$remote_root/secrets'"
 rsync -a "$repo_root/panel/compose.yaml" "$ssh_host:$remote_root/compose.yaml"

@@ -4,7 +4,7 @@ umask 022
 
 # Build committed remote sources without rewriting any source working tree.
 # Commit and push each remote repository before running this script.
-# Requires Node 22.12–26.x, pnpm 11, Go 1.27.1, SSH, tar, and rsync on the build host.
+# Requires Node 22.12–26.x, pnpm 11, Go 1.27.3, SSH, tar, and rsync on the build host.
 # Only the Vite dist and a static Linux/amd64 executable enter the release.
 repo_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)"
 ssh_host="${SSH_HOST:-cateam}"
@@ -75,8 +75,8 @@ rsync -a -- "$workspace/touranki-web/dist/" "$staged_release/web/"
 (
     cd -- "$workspace/touranki-server"
     # The sibling workspace preserves replace touranki-core => ../touranki-core.
-    # Disable ambient Go workspaces and pin the compiler required by both modules.
-    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GOTOOLCHAIN=go1.27.1 GOWORK=off \
+    # Disable ambient Go workspaces and pin the compiler with the X.509 distrust fix.
+    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GOTOOLCHAIN=go1.27.3 GOWORK=off \
         go build -mod=readonly -trimpath -ldflags='-s -w' \
         -o "$staged_release/touranki-server" ./cmd/touranki-server
 )
