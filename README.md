@@ -1,6 +1,6 @@
 # HustCA Mainpage
 
-计算机协会主页的 Hugo 静态站点仓库，保存主页源码、主题配置、已构建的静态文件，以及服务器使用的 Docker Compose 部署配置与脚本。
+计算机协会主页的 Hugo 静态站点仓库，保存主页源码、主题配置、自动发布流程，以及服务器使用的 Docker Compose 部署配置与脚本。
 
 > **当前已是使用真实计协品牌和资料的可浏览主页，不再是 Gentoo 社区示例首页。活动排期和成员档案等未确认内容仍明确标为占位，不能视为正式通知或真实成员名单。**
 
@@ -27,14 +27,16 @@
 | `layouts/`、`i18n/` | 主题允许的站点级适配与翻译，不修改下载的模块文件 |
 | `data/home.yaml` | 首页入口、社区链接、素材卡片与共建方向 |
 | `data/materials.yaml` | 素材来源、处理记录、使用限制及未发布材料说明 |
-| `public/` | 已构建的静态站点，当前纳入 Git 版本管理 |
+| `public/` | 本地或 CI 生成的静态站点，不纳入 Git |
 | `deploy/` | 非敏感编排配置、Caddy 配置、镜像定义及发布脚本 |
+| `.github/workflows/mainpage.yml` | PR 构建检查与 `main` 分支自动发布 |
+| `.github/CODEOWNERS` | 发布流程、主题配置和部署代码的维护者审查范围 |
 
 Touranki 的游戏源码不在本仓库：分别由 [touranki-web](https://github.com/HustCAteam/touranki-web)、[touranki-server](https://github.com/HustCAteam/touranki-server) 与 [touranki-core](https://github.com/HustCAteam/touranki-core) 管理。招新密码小游戏由独立的 [password-game](https://github.com/HustCAteam/password-game) 私有仓库管理。`deploy/` 保存这三个站点共享的服务器部署配置，不包含小游戏源码。
 
 ## 本地预览与构建
 
-需要 Go `1.26.3` 或更高版本，以及 Hugo extended；当前站点已使用 Hugo extended `0.154.5` 构建。首次运行会拉取锁定的主题模块。
+需要 Hugo extended 与 Go；CI 固定使用 Go `1.27.3`，并用该工具链从源码编译 Hugo extended `0.154.5`，避免沿用旧 Go 编译的构建工具。首次运行会拉取 `go.mod`、`go.sum` 锁定的主题模块。安装同版本 Hugo 需要 C/C++ 编译器：`GOTOOLCHAIN=go1.27.3 CGO_ENABLED=1 go install -tags extended github.com/gohugoio/hugo@v0.154.5`，并将 Go 的 `bin` 目录加入 `PATH`。
 
 在仓库根目录执行：
 
@@ -60,14 +62,32 @@ hugo --environment production --minify --cleanDestinationDir --gc
 
 ## 版本管理与发布
 
-修改主页源码后，需要重新构建 `public/`，将源码和对应静态产物一起提交、推送 GitHub。构建时清理目标目录，确保删除的内容及旧哈希搜索索引不再对外提供。**单纯推送源码不会自动重新生成或部署网站。**
+**只提交源码和资源，不提交 `public/`、`resources/` 或 `.hugo_build.lock`。** PR 的 `Hugo build` 检查会运行发布器边界测试并构建完整站点；合并到 `main` 后，GitHub Actions 自动构建、发布到 [https://hustca.cn:404/](https://hustca.cn:404/)，再比对线上首页与本次构建的 SHA256。
 
-- `deploy/scripts/stage-mainpage.sh` 只读取远端主页仓库已提交 HEAD 中的 `public/`，不自动运行 Hugo，也不使用本机旧副本覆盖远端源码。
-- `deploy/scripts/deploy.sh` 是主页、Touranki 与招新密码小游戏的完整发布入口，需要预先配置构建工具、Docker 与密钥 SSH，并准备三个项目的远端源码仓库；它不是通用的一键安装脚本。
-- 完整发布会同步编排配置并更新服务，可能重建 Touranki 后端。后端房间、会话与对局保存在内存中，重建会丢失这些状态；仅修改主页时，不应未经核对就执行完整发布。
-- 服务器当前运行目录为 `/root/cateam`，配置的版本化副本在本仓库 `deploy/`。修改运行配置后，应同步版本化副本并提交，避免运行状态与 Git 记录分叉。
-- Caddy 的 `hustca.cn` 站点错误处理会以原 404 状态返回 `public/404.html`；不改 Touranki 路由及现有 404／443 端口映射。
-- 密码、私钥、面板凭据和其他秘密不得提交到仓库。
+### 团队协作
+
+- 没有写权限的成员可以 Fork 本仓库，在自己的分支修改，再向 `main` 提交 PR；无需服务器账号。已有写权限的成员也通过分支和 PR 提交，不直接推送 `main`。
+- 合并要求 `Hugo build` 通过、分支与 `main` 同步，以及至少一位有写权限的维护者批准。`.github/`、`deploy/`、主题依赖、布局与样式配置还须由 `CODEOWNERS` 指定的维护者批准；新提交会撤销过时的批准。
+- 仓库管理员保留紧急绕过权限；正常协作不绕过检查和审核。部署不再增加一次人工审批，合并后自动执行。
+- 在 [Actions → Mainpage](https://github.com/HustCAteam/cateam/actions/workflows/mainpage.yml) 查看发布结果。外部贡献者的首次运行可能需要维护者批准；`draft: true` 的文章不会进入生产构建。
+
+### 发布权限与版本目录
+
+- `production` 环境只允许 `main` 分支部署。PR 构建没有生产密钥；部署 job 不检出源码，只接收同一次运行的静态归档并校验摘要。Actions 固定完整提交 SHA，主题模块只读，不在发布时更新依赖。
+- 环境 Secret `DEPLOY_SSH_KEY` 使用独立账号 `hustca-deploy` 的密钥，不能复用管理员私钥。环境 Variables 为 `DEPLOY_HOST`、`DEPLOY_PORT`、`DEPLOY_USER`、`SSH_KNOWN_HOSTS`、`SITE_URL`；当前分别指向服务器、SSH 22、发布账号、经可信 SSH 会话核对的主机公钥、上述 HTTPS 入口。不能临时扫描主机公钥代替身份核验，也不能关闭 SSH 或 HTTPS 校验。
+- 发布器源码为 `deploy/scripts/publish-mainpage.py`，服务器安装位置为 `/usr/local/libexec/hustca-publish.py`，由 root 拥有。发布账号没有 sudo/Docker 权限，账号的家目录和公钥文件由 root 管理；公钥使用 `restrict,command="/usr/local/libexec/hustca-publish.py"`，只允许 `status` 与受限的 `publish`，不允许 shell、SFTP 或端口转发。
+- 发布文件位于 `/srv/hustca/releases/<run_id>-<run_attempt>-<commit_sha>/`。完整上传、摘要与归档安全检查成功后，原子切换相对软链接 `current`；上传或检查失败不会替换现有站点。并发发布加锁，旧运行不能覆盖新运行；归档上限为压缩后 64 MiB、展开后 128 MiB、10,000 个成员，禁止路径穿越、链接及特殊文件。
+- Caddy 挂载父目录 `/srv/hustca:/srv/mainpage:ro`，根目录为 `/srv/mainpage/current`。不能直接挂载 `current` 软链接，否则切换版本后容器可能继续读取旧目录。正常官网发布不重启 Caddy、Touranki 或密码小游戏。
+- 最近五个已发布版本保留供恢复，发布记录保存在不对外提供的 `receipts/` 中；GitHub 静态归档保留七天。
+
+### 维护与回滚
+
+- 回滚通过撤销问题提交并提交 PR 完成，产生新的发布运行。不要重新运行旧提交的部署任务：旧提交和旧运行会被拒绝或跳过。仅需重发当前版本时，在 `Mainpage` 中选择 `main` 手动运行。
+- 紧急恢复可由服务器维护者将 `current` 原子切回 `releases/` 中已有版本，随后仍需撤销 Git 中的问题提交，避免下一次发布重新引入问题。
+- 修改发布器后，由维护者审查、运行 `python3 -m unittest discover -s deploy/tests -v`，再以 root 更新服务器安装副本；CI 发布账号不能改写自身程序。公钥轮换也由维护者同时更新 root 管理的 `authorized_keys` 与 GitHub 环境 Secret。
+- `deploy/scripts/deploy.sh` 只负责网关与游戏服务的基础设施发布，不再读取或覆盖官网生成目录。它可能重建 Touranki 后端并丢失内存中的房间、会话与对局，不能拿来发布文章。
+- 服务器运行配置位于 `/root/cateam`，版本化副本位于本仓库 `deploy/`。基础设施变更仍需单独维护；自动发布官网不意味着修改 Compose 或 Caddy 配置也会自动生效。
+- 自定义错误页仍返回原 404 状态，域名及 404／443 端口映射保持不变。密码、私钥、面板凭据和其他秘密不得提交到仓库。
 
 ### 证书信任安全更新（2026-10-22）
 

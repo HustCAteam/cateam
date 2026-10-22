@@ -11,7 +11,7 @@ services:
       - "443:443/udp"
     volumes:
       - ./caddy:/etc/caddy:ro
-      - /root/mainpage/cateam/public:/srv/mainpage:ro
+      - /srv/hustca:/srv/mainpage:ro
       - /root/touranki/web:/srv/touranki:ro
       - caddy_data:/data
       - caddy_config:/config
