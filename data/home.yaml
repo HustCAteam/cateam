@@ -25,10 +25,6 @@ community:
     name: 学码编程交流群
     sub: QQ · 695523861
     link: /join/#coding
-  - icon: telegram
-    name: Telegram
-    sub: "@hustca · HUST CA"
-    link: https://t.me/hustca
   - icon: github
     name: GitHub
     sub: HustCAteam · 一起写点东西

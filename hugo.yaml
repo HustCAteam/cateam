@@ -46,7 +46,6 @@ params:
     width: wide
   sameAs:
     - https://github.com/HustCAteam
-    - https://t.me/hustca
 menu:
   main:
     - name: 认识计协

@@ -11,7 +11,7 @@
 - 已有首页、协会介绍、加入与交流、Touranki 项目展台、文章与活动、共学手册、四个共建方向及网站共建指南；文章标签、RSS、手机导航、群号复制和 404 页面均有对应入口。
 - 使用本机提供的原版 CA Logo、两张最新招新海报及对应二维码、历史义务维修招牌裁图，以及 Touranki 项目既有背景。来源、裁剪方法和公开范围记录在 `data/materials.yaml`；未发布人脸合照、旧二维码、私人表单或原始 PPT。
 - 协会介绍与参与方向依据已有公开资料整理。`content/posts/activity-example/` 是明确标注的活动文案示例；`content/contributors/` 展示软件、硬件、内容设计和活动运营方向，成员档案待补充，不虚构人物或提交次数。
-- 首页中的入口来自 `data/home.yaml`，最新文章从 `content/posts/` 读取；QQ 群号为 `1071797934` 与 `695523861`，Telegram 为 [@hustca](https://t.me/hustca)。交流入口集中在 `content/join/index.md`，二维码链接是否继续可用以 QQ 客户端为准。
+- 首页中的入口来自 `data/home.yaml`，最新文章从 `content/posts/` 读取；QQ 群号为 `1071797934` 与 `695523861`。交流入口集中在 `content/join/index.md`，二维码链接是否继续可用以 QQ 客户端为准。
 
 主页域名为 `hustca.cn`，当前临时 HTTPS 入口为 [https://hustca.cn:404/](https://hustca.cn:404/)。入口可访问不表示占位内容已获确认，也不表示备案要求已满足。
 
@@ -43,7 +43,7 @@ Touranki 的游戏源码不在本仓库：分别由 [touranki-web](https://githu
 hugo server
 
 # 生产构建，输出到 public/
-hugo --environment production --minify
+hugo --environment production --minify --cleanDestinationDir --gc
 ```
 
 编辑首页文案从 `content/_index.md` 开始，入口配置在 `data/home.yaml`；菜单、Logo、搜索等参数在 `hugo.yaml`。文章放在 `content/posts/<slug>/index.md`，栏目已经设置 `type: blog`；共学手册在 `content/docs/`，方向档案在 `content/contributors/`。正式活动确认前，保留标题、摘要与正文中的占位标记。`draft: true` 的内容默认不进入生产构建。
@@ -60,7 +60,7 @@ hugo --environment production --minify
 
 ## 版本管理与发布
 
-修改主页源码后，需要重新构建 `public/`，将源码和对应静态产物一起提交、推送 GitHub。**单纯推送源码不会自动重新生成或部署网站。**
+修改主页源码后，需要重新构建 `public/`，将源码和对应静态产物一起提交、推送 GitHub。构建时清理目标目录，确保删除的内容及旧哈希搜索索引不再对外提供。**单纯推送源码不会自动重新生成或部署网站。**
 
 - `deploy/scripts/stage-mainpage.sh` 只读取远端主页仓库已提交 HEAD 中的 `public/`，不自动运行 Hugo，也不使用本机旧副本覆盖远端源码。
 - `deploy/scripts/deploy.sh` 是主页、Touranki 与招新密码小游戏的完整发布入口，需要预先配置构建工具、Docker 与密钥 SSH，并准备三个项目的远端源码仓库；它不是通用的一键安装脚本。
@@ -76,7 +76,7 @@ hugo --environment production --minify
 - 每局题组在开始时抽好，输入不会换题，重新开始会重新抽取；当前已显示题目全部通过后自动解锁下一题，已解锁题目不会收回。密码不再有全局字符数上下限，仍须满足本局十条规则。需要汉字的题面加粗提示「请输入汉字，不是拼音」，输入框明确一个汉字算一个字符。罗马数字题已移除，题面只保留判定条件和必要的实时统计，不提供直接答案示例。
 - `1037` 分支不抽「数字唯一」和「数字符号」，避免与连续门牌号及其他位置条件冲突。每个校园分支的整个可选题池都有通过规则引擎检验的共同解，因此其任意合法十题组合均可解；验证用答案仅在不对外发布的测试中，不提供自动填答或预置公开记录。
 - 前端使用原生 HTML/CSS/ES Module，服务端使用 Node.js 24+ 与内置 SQLite，不依赖 Hugo，也不复刻 Gentoo 模板。复用计协 Logo 与蓝绿 Material 配色，适配手机和系统暗色模式；灵感来自 [The Password Game](https://neal.fun/password-game/)，不是原作官方版本。
-- 普通游玩、通关、填写寄语和勾选同意都不会上传输入。只有通关后明确勾选公开同意，再点击「公开分享」，完整游戏密码、选填寄语和本轮题组才会上传、保存并向所有访客公开；页面禁止使用真实密码或个人信息。刷新和重新开始只清空本地游戏，不删除公开记录；当前没有玩家自助撤回接口。通关后仍提供招新页与 [Telegram 社群](https://t.me/hustca) 入口。
+- 普通游玩、通关、填写寄语和勾选同意都不会上传输入。只有通关后明确勾选公开同意，再点击「公开分享」，完整游戏密码、选填寄语和本轮题组才会上传、保存并向所有访客公开；页面禁止使用真实密码或个人信息。刷新和重新开始只清空本地游戏，不删除公开记录；当前没有玩家自助撤回接口。通关后仍提供招新页入口。
 - 「查看大家的答案」位于通关后的按钮列表，未通关时不显示入口或列表；通关后无需先上传即可浏览。此限制用于避免剧透，**不是访问授权**，分享数据及读取接口仍是公开的。支持刷新、每页 12 条的游标分页、空列表及失败重试；每条记录可展开查看上传时的题面，旧版未存题组的记录有明确标识。密码、寄语和题面均仅作为文字渲染，不执行其中的 HTML。
 - 浏览器需要支持 `Intl.Segmenter`；汉字和完整表情按用户感知的字符计数。开发需要 Node.js 24+，无 npm 依赖；在 **password-game 仓库**运行 `npm test`、`npm run build`，再用 `npm run preview` 在 `http://127.0.0.1:18405/` 预览真实页面与 API。本地数据在被 Git 和 Docker 构建忽略的 `.data/shares.sqlite`。
 - 前后端共同使用 `src/rules.js` 抽题、检查题号/题位及判定规则，避免浏览器伪造通关结果；交互在 `src/app.js`、`src/shares.js`，共享题面渲染在 `src/rule-view.js`，分享限制在 `src/share-policy.js`，HTTP/SQLite 服务在 `server/`。题目语义或抽取协议变化时应递增 `RULES_VERSION` 并同步前后端；已公开题面使用数据库快照展示，不按新题面重新解释。升级前已打开的旧页面须刷新后重新挑战。`scripts/build.mjs` 只复制必要前端文件到 `public/`；测试、数据库、服务端源码及 Git 文件不对外提供，构建产物不纳入小游戏 Git 仓库。
