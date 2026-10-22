@@ -85,7 +85,7 @@ hugo --environment production --minify --cleanDestinationDir --gc
 - 回滚通过撤销问题提交并提交 PR 完成，产生新的发布运行。不要重新运行旧提交的部署任务：旧提交和旧运行会被拒绝或跳过。仅需重发当前版本时，在 `Mainpage` 中选择 `main` 手动运行。
 - 紧急恢复可由服务器维护者将 `current` 原子切回 `releases/` 中已有版本，随后仍需撤销 Git 中的问题提交，避免下一次发布重新引入问题。
 - 修改发布器后，由维护者审查、运行 `python3 -m unittest discover -s deploy/tests -v`，再以 root 更新服务器安装副本；CI 发布账号不能改写自身程序。公钥轮换也由维护者同时更新 root 管理的 `authorized_keys` 与 GitHub 环境 Secret。
-- `deploy/scripts/deploy.sh` 只负责网关与游戏服务的基础设施发布，不再读取或覆盖官网生成目录。它可能重建 Touranki 后端并丢失内存中的房间、会话与对局，不能拿来发布文章。
+- `deploy/scripts/deploy.sh` 是维护者在具备构建工具、Docker、密钥 SSH 和游戏源码仓库的发布环境使用的基础设施入口，不是服务器一键安装脚本。它只更新网关与游戏服务，不再读取或覆盖官网生成目录；运行时可能重建 Touranki 后端并丢失内存中的房间、会话与对局，不能拿来发布文章。
 - 服务器运行配置位于 `/root/cateam`，版本化副本位于本仓库 `deploy/`。基础设施变更仍需单独维护；自动发布官网不意味着修改 Compose 或 Caddy 配置也会自动生效。
 - 自定义错误页仍返回原 404 状态，域名及 404／443 端口映射保持不变。密码、私钥、面板凭据和其他秘密不得提交到仓库。
 
