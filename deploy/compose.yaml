@@ -6,7 +6,6 @@ services:
     restart: unless-stopped
     ports:
       - "80:80"
-      - "404:443"
       - "443:443"
       - "443:443/udp"
     volumes:
@@ -32,7 +31,7 @@ services:
     cap_drop: ["ALL"]
     security_opt: ["no-new-privileges:true"]
     environment:
-      ALLOWED_ORIGINS: "https://pg.hustca.cn:404,https://pg.hustca.cn"
+      ALLOWED_ORIGINS: "https://pg.hustca.cn"
       TRUST_PROXY: "1"
     volumes:
       - password_game_data:/data

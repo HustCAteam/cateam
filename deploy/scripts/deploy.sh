@@ -26,7 +26,7 @@ ssh "$SSH_HOST" "systemctl disable --now nginx && docker compose --project-direc
 
 curl --noproxy '*' --fail --silent --show-error --retry 8 --retry-delay 3 --retry-all-errors --max-time 20 https://hustca.cn/ --output /dev/null
 curl --noproxy '*' --fail --silent --show-error --retry 8 --retry-delay 3 --retry-all-errors --max-time 20 https://touranki.1037.games/api/v1/version
-curl --noproxy '*' --fail --silent --show-error --retry 8 --retry-delay 3 --retry-all-errors --max-time 20 https://pg.hustca.cn:404/ --output /dev/null
-curl --noproxy '*' --fail --silent --show-error --max-time 20 https://pg.hustca.cn:404/healthz --output /dev/null
+curl --noproxy '*' --fail --silent --show-error --retry 8 --retry-delay 3 --retry-all-errors --max-time 20 https://pg.hustca.cn/ --output /dev/null
+curl --noproxy '*' --fail --silent --show-error --max-time 20 https://pg.hustca.cn/healthz --output /dev/null
 printf '\nUpdated gateway and game services; homepage content is published by GitHub Actions.\n'
-printf 'Temporary HTTPS entries: https://hustca.cn:404/, https://touranki.1037.games:404/ and https://pg.hustca.cn:404/ (direct responses; existing 443 remains available).\n'
+printf 'HTTPS entries: https://hustca.cn/, https://touranki.1037.games/ and https://pg.hustca.cn/ (HTTP redirects to HTTPS).\n'

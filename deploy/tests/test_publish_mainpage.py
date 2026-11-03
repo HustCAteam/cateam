@@ -333,7 +333,7 @@ class PublisherTests(unittest.TestCase):
         with mock.patch.object(publisher_module.http.client, "HTTPSConnection", return_value=connection):
             yield connection
 
-    def verify_baseline(self, url="https://hustca.cn:404/", **changes):
+    def verify_baseline(self, url="https://hustca.cn/", **changes):
         arguments = dict(revision=REVISION, run_id=10, run_attempt=1,
                          index_sha256=self.baseline["index_sha256"], url=url)
         arguments.update(changes)
@@ -341,10 +341,10 @@ class PublisherTests(unittest.TestCase):
 
     def test_verification_checks_live_response_and_expected_release(self):
         with self.https_response():
-            command = f"verify {REVISION} 10 1 {self.baseline['index_sha256']} https://hustca.cn:404/"
+            command = f"verify {REVISION} 10 1 {self.baseline['index_sha256']} https://hustca.cn/"
             code, output, error = self.invoke(command)
         self.assertEqual((code, error), (0, ""))
-        self.assertEqual(json.loads(output), dict(self.baseline, verified_url="https://hustca.cn:404/", http_status=200))
+        self.assertEqual(json.loads(output), dict(self.baseline, verified_url="https://hustca.cn/", http_status=200))
         for body, status in ((b"old or substituted homepage", 200), (b"", 302), (b"unavailable", 503)):
             with self.subTest(status=status), self.https_response(body, status):
                 with self.assertRaises(publisher_module.PublishError):
@@ -353,7 +353,8 @@ class PublisherTests(unittest.TestCase):
 
     def test_verification_refuses_other_origins_and_stale_identity_before_network(self):
         urls = ("http://hustca.cn/", "https://example.org/", "https://127.0.0.1/",
-                "https://hustca.cn:22/", "https://hustca.cn/other", "https://hustca.cn/?q=x",
+                "https://hustca.cn:22/", "https://hustca.cn:404/",
+                "https://hustca.cn/other", "https://hustca.cn/?q=x",
                 "https://hustca.cn/#fragment", "https://hustca.cn@127.0.0.1/")
         with mock.patch.object(publisher_module.http.client, "HTTPSConnection",
                                side_effect=AssertionError("forbidden network access")):

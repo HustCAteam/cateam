@@ -13,7 +13,7 @@
 - 协会介绍与参与方向依据已有公开资料整理。`content/posts/activity-example/` 是明确标注的活动文案示例；`content/contributors/` 展示软件、硬件、内容设计和活动运营方向，成员档案待补充，不虚构人物或提交次数。
 - 首页中的入口来自 `data/home.yaml`，最新文章从 `content/posts/` 读取；QQ 群号为 `1071797934` 与 `695523861`。交流入口集中在 `content/join/index.md`，二维码链接是否继续可用以 QQ 客户端为准。
 
-主页域名为 `hustca.cn`，当前 HTTPS 入口为 [https://hustca.cn:404/](https://hustca.cn:404/)。ICP备案已完成，备案号为 [津ICP备2026016183号](https://beian.miit.gov.cn/)，在全站页脚展示并链接至工信部备案查询网站。后续端口调整单独处理。
+主页入口为 [https://hustca.cn/](https://hustca.cn/)，HTTP 自动跳转到 HTTPS，临时 404 端口已停用。ICP备案已完成，备案号为 [津ICP备2026016183号](https://beian.miit.gov.cn/)，在全站页脚展示并链接至工信部备案查询网站。
 
 ## 仓库结构
 
@@ -62,7 +62,7 @@ hugo --environment production --minify --cleanDestinationDir --gc
 
 ## 版本管理与发布
 
-**只提交源码和资源，不提交 `public/`、`resources/` 或 `.hugo_build.lock`。** PR 的 `Hugo build` 检查会运行发布器边界测试并构建完整站点；合并到 `main` 后，GitHub Actions 自动构建、发布到 [https://hustca.cn:404/](https://hustca.cn:404/)，再通过受限命令请求官网 HTTPS 首页，核验本次发布版本与响应的 SHA256。
+**只提交源码和资源，不提交 `public/`、`resources/` 或 `.hugo_build.lock`。** PR 的 `Hugo build` 检查会运行发布器边界测试并构建完整站点；合并到 `main` 后，GitHub Actions 自动构建、发布到 [https://hustca.cn/](https://hustca.cn/)，再通过受限命令请求官网 HTTPS 首页，核验本次发布版本与响应的 SHA256。
 
 ### 团队协作
 
@@ -76,7 +76,7 @@ hugo --environment production --minify --cleanDestinationDir --gc
 - `production` 环境只允许 `main` 分支部署。PR 构建没有生产密钥；部署 job 不检出源码，只接收同一次运行的静态归档并校验摘要。Actions 固定完整提交 SHA，主题模块只读，不在发布时更新依赖。
 - 环境 Secret `DEPLOY_SSH_KEY` 使用独立账号 `hustca-deploy` 的密钥，不能复用管理员私钥。环境 Variables 为 `DEPLOY_HOST`、`DEPLOY_PORT`、`DEPLOY_USER`、`SSH_KNOWN_HOSTS`、`SITE_URL`；当前分别指向服务器、SSH 22、发布账号、经可信 SSH 会话核对的主机公钥、上述 HTTPS 入口。不能临时扫描主机公钥代替身份核验，也不能关闭 SSH 或 HTTPS 校验。
 - 发布器源码为 `deploy/scripts/publish-mainpage.py`，服务器安装位置为 `/usr/local/libexec/hustca-publish.py`，由 root 拥有。发布账号没有 sudo/Docker 权限，账号的家目录和公钥文件由 root 管理；公钥使用 `restrict,command="/usr/local/libexec/hustca-publish.py"`，只允许 `status`、`publish`、`verify`，不允许 shell、SFTP 或端口转发。
-- `verify` 在服务器上通过 HTTPS 请求官网，只接受 `hustca.cn` 的 404／443 端口首页。证书与域名校验开启，不跟随重定向；当前提交、运行编号、HTTP 200 和响应 SHA256 必须与本次构建一致。初始化时，GitHub 海外 runner 到 `hustca.cn` 及其子域在 TLS 握手阶段被重置，同 IP 的 Touranki 域名正常；因此由服务器执行 HTTPS 验收，不降低 TLS 安全要求。这不代表海外链路已经恢复，也不替代异地可达性检查。
+- `verify` 在服务器上通过 HTTPS 请求官网，只接受 `hustca.cn` 的标准 443 端口首页，不再接受临时 404 端口。证书与域名校验开启，不跟随重定向；当前提交、运行编号、HTTP 200 和响应 SHA256 必须与本次构建一致。初始化时，GitHub 海外 runner 到 `hustca.cn` 及其子域在 TLS 握手阶段被重置，同 IP 的 Touranki 域名正常；因此由服务器执行 HTTPS 验收，不降低 TLS 安全要求。海外链路可达性需另行确认。
 - 发布文件位于 `/srv/hustca/releases/<run_id>-<run_attempt>-<commit_sha>/`。完整上传、摘要与归档安全检查成功后，原子切换相对软链接 `current`；上传或归档检查失败不会替换现有站点。并发发布加锁，旧运行不能覆盖新运行；归档上限为压缩后 64 MiB、展开后 128 MiB、10,000 个成员，禁止路径穿越、链接及特殊文件。
 - Caddy 挂载父目录 `/srv/hustca:/srv/mainpage:ro`，根目录为 `/srv/mainpage/current`。不能直接挂载 `current` 软链接，否则切换版本后容器可能继续读取旧目录。正常官网发布不重启 Caddy、Touranki 或密码小游戏。
 - 最近五个已发布版本保留供恢复，发布记录保存在不对外提供的 `receipts/` 中；GitHub 静态归档保留七天。
@@ -89,7 +89,7 @@ hugo --environment production --minify --cleanDestinationDir --gc
 - 修改发布器后，由维护者审查、运行 `python3 -m unittest discover -s deploy/tests -v`，再以 root 更新服务器安装副本；CI 发布账号不能改写自身程序。公钥轮换也由维护者同时更新 root 管理的 `authorized_keys` 与 GitHub 环境 Secret。
 - `deploy/scripts/deploy.sh` 是维护者在具备构建工具、Docker、密钥 SSH 和游戏源码仓库的发布环境使用的基础设施入口，不是服务器一键安装脚本。它只更新网关与游戏服务，不再读取或覆盖官网生成目录；运行时可能重建 Touranki 后端并丢失内存中的房间、会话与对局，不能拿来发布文章。
 - 服务器运行配置位于 `/root/cateam`，版本化副本位于本仓库 `deploy/`。基础设施变更仍需单独维护；自动发布官网不意味着修改 Compose 或 Caddy 配置也会自动生效。
-- 自定义错误页仍返回原 404 状态，域名及 404／443 端口映射保持不变。密码、私钥、面板凭据和其他秘密不得提交到仓库。
+- 自定义错误页仍返回 HTTP 404 状态；这与已撤销的临时 404 端口无关。网站仅发布 TCP 80／443 和 UDP 443，HTTP 自动跳转到 HTTPS；面板独立使用 9443。密码、私钥、面板凭据和其他秘密不得提交到仓库。
 
 ### 证书信任安全更新（2026-10-22）
 
@@ -104,7 +104,7 @@ hugo --environment production --minify --cleanDestinationDir --gc
 
 ### 招新小游戏：喻家山密码挑战
 
-- 入口为 [https://pg.hustca.cn:404/](https://pg.hustca.cn:404/)，DNS A 记录指向 `121.40.128.93`。404 端口直接提供 HTTPS 页面，不是跳转到 80 端口；后续端口调整仍由服务器维护者处理。
+- 入口为 [https://pg.hustca.cn/](https://pg.hustca.cn/)，DNS A 记录指向 `121.40.128.93`。标准 HTTPS 443 直接提供页面，HTTP 80 自动跳转；分享接口仅接受 `https://pg.hustca.cn` 来源，旧 404 入口不再使用。
 - 题库融合同学提供的 30 条规则方案，当前共 **43 个候选题**；每局无放回抽取 **10 题**，按「易、易、中、易、中、中、难、中、难、难」排列，即简单 3、中等 4、困难 3。第四题固定从校园候选中抽取，包含 `CAteam`、`1037`、`绝望坡`、`野猪`、`电动车`、`百团大战`、`武汉`、`华科`、`喻家山`、`东湖`、`东九`、`西十二`、`cateam`、`hustca`；其他题位也有替换题。
 - 每局题组在开始时抽好，输入不会换题，重新开始会重新抽取；当前已显示题目全部通过后自动解锁下一题，已解锁题目不会收回。密码不再有全局字符数上下限，仍须满足本局十条规则。需要汉字的题面加粗提示「请输入汉字，不是拼音」，输入框明确一个汉字算一个字符。罗马数字题已移除，题面只保留判定条件和必要的实时统计，不提供直接答案示例。
 - `1037` 分支不抽「数字唯一」和「数字符号」，避免与连续门牌号及其他位置条件冲突。每个校园分支的整个可选题池都有通过规则引擎检验的共同解，因此其任意合法十题组合均可解；验证用答案仅在不对外发布的测试中，不提供自动填答或预置公开记录。

@@ -111,7 +111,7 @@ assets:
     source: "~/Projects/touhou-hitman-go/touranki-web/public/materials/table-background.webp"
     source_size: [1280, 720]
     corroborating_reference: "~/Projects/touhou-hitman-go/touranki-web/src/styles.css 的 body 背景引用 /materials/table-background.webp"
-    project_url: "https://touranki.1037.games:404/"
+    project_url: "https://touranki.1037.games/"
     meaning: Touranki 项目已有场景背景图，用于该项目的入口配图
     processing: 居中裁切并等比例缩小为 1024×600，WebP quality 88 / method 6；未拼接或新增艺术素材。
     restrictions:
