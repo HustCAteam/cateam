@@ -10,7 +10,7 @@ description: "体验已上线的 Touranki，找到真实源码入口与协作方
 **Touranki 是已上线的游戏项目**，可以直接通过浏览器访问。打开游戏，探索当前玩法；也可以顺着下面的源码入口，进一步了解项目。
 
 {{< cards cols="1" >}}
-  {{< card link="https://touranki.1037.games:404/" title="打开 Touranki" subtitle="进入现有游戏站点。反馈问题前，记下操作步骤与出现的现象。" tag="已上线" >}}
+{{< card link="https://touranki.1037.games/" title="打开 Touranki" subtitle="进入现有游戏站点。反馈问题前，记下操作步骤与出现的现象。" tag="已上线" >}}
 {{< /cards >}}
 
 ### 三个源码入口

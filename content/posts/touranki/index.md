@@ -9,7 +9,7 @@ summary: "Touranki 已上线。这里整理游戏入口与三个协会仓库地�
 **Touranki 已上线，可以通过浏览器访问。** 想知道项目是什么样，不妨先打开它，而不是先给自己安排一长串学习任务。
 
 {{< cards cols="1" >}}
-  {{< card link="https://touranki.1037.games:404/" title="前往 Touranki" subtitle="在游戏站点查看当前玩法与功能。" tag="已上线" >}}
+{{< card link="https://touranki.1037.games/" title="前往 Touranki" subtitle="在游戏站点查看当前玩法与功能。" tag="已上线" >}}
 {{< /cards >}}
 
 ## 玩过之后，能做什么

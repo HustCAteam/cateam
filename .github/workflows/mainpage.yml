@@ -145,7 +145,7 @@ jobs:
           test -n "$DEPLOY_HOST"
           test -n "$DEPLOY_USER"
           [[ "$DEPLOY_PORT" =~ ^[0-9]{1,5}$ ]]
-          [[ "$SITE_URL" =~ ^https://hustca\.cn(:404|:443)?/?$ ]]
+          [[ "$SITE_URL" =~ ^https://hustca\.cn(:443)?/?$ ]]
           printf '%s\n' "$DEPLOY_SSH_KEY" > "$credentials/key"
           printf '%s\n' "$SSH_KNOWN_HOSTS" > "$credentials/known_hosts"
           unset DEPLOY_SSH_KEY SSH_KNOWN_HOSTS

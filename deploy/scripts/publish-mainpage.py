@@ -37,7 +37,7 @@ COMMAND_RE = re.compile(
 VERIFY_COMMAND_RE = re.compile(
     r"verify ([0-9a-f]{40}) ([0-9]{1,20}) ([0-9]{1,20}) ([0-9a-f]{64}) (\S+)\Z"
 )
-VERIFY_URL_RE = re.compile(r"https://hustca\.cn(?::(404|443))?/?\Z")
+VERIFY_URL_RE = re.compile(r"https://hustca\.cn(?::(443))?/?\Z")
 RECEIPT_KEYS = {"revision", "run_id", "run_attempt", "archive_sha256", "index_sha256"}
 
 
